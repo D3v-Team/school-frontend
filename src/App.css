@@ -1,0 +1,61 @@
+/* Общие стили для календаря */
+.calendar {
+    background-color: white;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для ячеек календаря */
+.react-calendar {
+    border: none !important;
+    width: 100%;
+    max-width: 350px;
+    background: #fff;
+    border-radius: 10px;
+    font-family: sans-serif;
+}
+
+.react-calendar__tile {
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+.react-calendar__tile--active {
+    background: #1f235b !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Стили для заголовка месяца */
+.react-calendar__navigation button {
+    color: #1f235b;
+    font-weight: bold;
+}
+
+.react-calendar__navigation button:enabled:hover {
+    background-color: #e0e7ff;
+    border-radius: 5px;
+}
+
+/* Стили для дней недели */
+.react-calendar__month-view__weekdays {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    color: #1f235b;
+}
+
+/* Стили для сегодняшней даты */
+.react-calendar__tile--now {
+    background: #ffeb3b;
+    color: black;
+    font-weight: bold;
+}
+
+/* Стили при наведении */
+.react-calendar__tile:hover {
+    background-color: #e0e7ff;
+    color: #1f235b;
+}
