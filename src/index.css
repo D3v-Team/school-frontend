@@ -128,10 +128,10 @@ html.dark .miniHeader span                  { color: var(--text-primary) !import
 /* footer */
 html.dark .footer { background-color: #0a0f1a !important; }
 
-/* inputs */
-html.dark input,
-html.dark textarea,
-html.dark select {
+/* inputs — dark mode (NOT inside admin panel which has its own dark styles) */
+html.dark body:not(:has(.admin-panel)) input,
+html.dark body:not(:has(.admin-panel)) textarea,
+html.dark body:not(:has(.admin-panel)) select {
   background-color: var(--bg-muted) !important;
   color: var(--text-primary) !important;
   border-color: var(--border) !important;

@@ -1,31 +1,35 @@
 import axios from "axios";
 
-export const BASE_URL = "https://api.ticty.uz";
+export const BASE_URL = "http://167.86.110.132:3002";
 
 export const $api = axios.create({
-  baseURL: `${BASE_URL}/api`,
-  headers: {
-    'Authorization': `Bearer ${localStorage.getItem('token')}` // Tokenni o‘rnatish uchun
-  },
+    baseURL: `${BASE_URL}`,
 });
 
-// Tokenni har bir so‘rov oldidan qo‘shish
+/* ── Attach token before every request ── */
 $api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+    const token = localStorage.getItem("token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
-// 401 qaytsa localStorage tozalab login sahifasiga yo‘naltirish
+/* ── Handle 401 globally ── */
 $api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.clear();
-      window.location.href = "/login"; // Agar Next.js bo‘lsa, useRouter bilan yo‘naltirish yaxshi
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.clear();
+            window.location.href = "/login";
+        }
+        return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
 );
+
+/* ── Auth helpers ── */
+export const getUser      = () => JSON.parse(localStorage.getItem("auth-user") || "null");
+export const getToken     = () => localStorage.getItem("token");
+export const getRole      = () => localStorage.getItem("role") || "";
+export const isAdmin      = () => ["ADMIN", "SUPER_ADMIN"].includes(getRole());
+export const isSuperAdmin = () => getRole() === "SUPER_ADMIN";

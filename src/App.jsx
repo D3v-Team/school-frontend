@@ -17,6 +17,23 @@ import AdminLayout from "./layouts/AdminLayout";
 import NotFound from "./Pages/NotFound";
 import Login from "./Pages/Login";
 import AdminNews from './AdminPages/News'
+import AdminAdmissions from './AdminPages/Admissions'
+import AdmissionDetail from './AdminPages/AdmissionDetail'
+import Announcements from './AdminPages/Announcements'
+import Appeals from './AdminPages/Appeals'
+import Banners from './AdminPages/Banners'
+import CanteenMenu from './AdminPages/CanteenMenu'
+import Clubs from './AdminPages/Clubs'
+import ContactInfo from './AdminPages/ContactInfo'
+import ContactMessages from './AdminPages/ContactMessages'
+import AdminDocuments from './AdminPages/Documents'
+import AdminEvents from './AdminPages/AdminEvents'
+import Media from './AdminPages/Media'
+import AdminPagesPage from './AdminPages/AdminPages'
+import RequiredDocuments from './AdminPages/RequiredDocuments'
+import UsefulLinks from './AdminPages/UsefulLinks'
+import Users from './AdminPages/Users'
+import UserDetail from './AdminPages/UserDetail'
 import Center from "./Pages/Center";
 import AdminCenter from "./AdminPages/Centers";
 import Rekvizits from "./Pages/Rekvizits";
@@ -98,21 +115,35 @@ function App() {
               <Route path="recvizits" element={<Recvisits />} />
               <Route path="management" element={<Management />} />
               <Route path="open-data" element={<OpenData />} />
-              <Route path="regulatory-doc" element={<RegulatoryDoc />} />
               <Route path="against-corrution" element={<AgainstCorruption />} />
               <Route path="schedule-event" element={<ScheduleEvent />} />
               <Route path="partners" element={<AdminPartners />} />
-              <Route path="events" element={<Events />} />
               <Route path="statistics" element={<Statistika />} />
-              <Route path="message-user" element={<MessageUser />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="photo-media" element={<PhotoMedia />} />
-              <Route path="video-media" element={<VideoMedia />} />
 
 
               <Route path="/admin/news" element={<AdminNews />} />
               <Route path="/admin/news/create" element={<AdminNewsCreate />} />
               <Route path="/admin/news/edit/:ID" element={<AdminNewsEdit />} />
+
+              <Route path="/admin/admissions" element={<AdminAdmissions />} />
+              <Route path="/admin/admissions/:id" element={<AdmissionDetail />} />
+              <Route path="/admin/announcements" element={<Announcements />} />
+              <Route path="/admin/contact-messages" element={<Appeals />} />
+              <Route path="/admin/banners" element={<Banners />} />
+              <Route path="/admin/canteen-menu" element={<CanteenMenu />} />
+              <Route path="/admin/clubs" element={<Clubs />} />
+              <Route path="/admin/contact-info" element={<ContactInfo />} />
+              <Route path="/admin/message-user" element={<ContactMessages />} />
+              <Route path="/admin/regulatory-doc" element={<AdminDocuments />} />
+              <Route path="/admin/events" element={<AdminEvents />} />
+              <Route path="/admin/photo-media" element={<Media />} />
+              <Route path="/admin/video-media" element={<Media />} />
+              <Route path="/admin/post" element={<AdminPagesPage />} />
+              <Route path="/admin/required-documents" element={<RequiredDocuments />} />
+              <Route path="/admin/useful-links" element={<UsefulLinks />} />
+              <Route path="/admin/users" element={<Users />} />
+              <Route path="/admin/users/:id" element={<UserDetail />} />
 
               <Route path='/admin/aboutUs/create' element={<AboutUsCreate />} />
               <Route path="/admin/aboutUs/edit/:ID" element={<AboutUsEdit />} />
@@ -136,9 +167,9 @@ function App() {
               <Route path="/admin/sections" element={<AdminCenter />} />
               <Route path="/admin/centers/create" element={<CreateCenter />} />
 
-              <Route path="/admin/post" element={<Post />} />
               <Route path="/admin/post/create/:ID" element={<PostCreate />} />
               <Route path="/admin/post/edit/:ID" element={<PostEdit />} />
+              <Route path="/admin/post/all/:ID" element={<AllPosts />} />>
               <Route path="/admin/post/all/:ID" element={<AllPosts />} />
 
             </Route>

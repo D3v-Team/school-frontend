@@ -1,105 +1,169 @@
-import React, { useState } from "react";
-import { Button, Input } from "@material-tailwind/react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
-import { sweetAlert } from "../utils/sweetalert";
-import bgImage from "../img/Footer.png";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const Login = () => {
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+export default function Login() {
+    const [phone_number, setPhone]    = useState("");
+    const [password, setPassword]     = useState("");
+    const [showPass, setShowPass]     = useState(false);
+    const [error, setError]           = useState("");
+    const [loading, setLoading]       = useState(false);
+    const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const loginData = { login, password };
-      const response = await axios.post(`/login`, loginData);
-      
-      if (response.status === 200) {
-        let token = response.data?.data?.token;
-        localStorage.setItem("token", token);
-        navigate("/admin");
-        sweetAlert("Muvaffaqiyatli", "success");
-      }
-    } catch (error) {
-      let errorText = error.response?.data?.message || "Xatolik yuz berdi";
-      setError(errorText);
-      sweetAlert(errorText, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleLogin = async (e) => {
+        e?.preventDefault();
+        if (!phone_number.trim() || !password.trim()) {
+            setError("Telefon raqam va parolni kiriting");
+            return;
+        }
+        setLoading(true);
+        setError("");
+        try {
+            const res = await axios.post("/api/auth/login", { phone_number, password });
+            const data = res.data;
 
-  // Enter tugmasini bosganda ishlaydigan funksiya
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Formning avtomatik jo‘natilishining oldini olamiz
-      handleLogin();
-    }
-  };
+            const token = data?.tokens?.access_token;
+            const refreshToken = data?.tokens?.refresh_token;
+            const role  = data?.user?.role  || "ADMIN";
+            const user  = data?.user || {};
 
-  return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: `url(${bgImage})` }}
-    >
-      <form 
-        className="w-full max-w-md p-6 bg-white bg-opacity-90 rounded-lg shadow-lg text-center"
-        onKeyDown={handleKeyDown} // Enter tugmachasini kuzatish uchun qo‘shildi
-      >
-        <h2 className="text-2xl font-semibold text-center mb-6">Kirish</h2>
-        <div className="space-y-4">
-          <Input
-            label="Login"
-            value={login}
-            onChange={(e) => setLogin(e.target.value)}
-            color="gray"
-            type="text"
-            required
-            className="border-black"
-          />
-          <div className="relative">
-            <Input
-              label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              color="gray"
-              type={showPassword ? "text" : "password"}
-              required
-              className="border-black pr-10"
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-3 flex items-center"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <FaEyeSlash className="w-5 h-5 text-gray-600" />
-              ) : (
-                <FaEye className="w-5 h-5 text-gray-600" />
-              )}
-            </button>
-          </div>
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-          <Button
-            fullWidth
-            color="gray"
-            onClick={handleLogin}
-            className="bg-black text-white hover:bg-gray-800 capitalize text-lg"
-            disabled={loading}
-          >
-            {loading ? "Yuklanmoqda..." : "Jo'natish"}
-          </Button>
+            if (!token) throw new Error("Token topilmadi");
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("refresh_token", refreshToken || "");
+            localStorage.setItem("role",  role);
+            localStorage.setItem("auth-user", JSON.stringify({
+                id:    user?.id    || "",
+                name:  user?.name  || user?.full_name || "",
+                phone: user?.phone_number || phone_number,
+                role,
+            }));
+
+            navigate("/admin");
+        } catch (err) {
+            const msg = err.response?.data?.message || err.message || "Xatolik yuz berdi";
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center"
+            style={{ background: '#0a0f1c' }}>
+
+            {/* background blobs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full opacity-10"
+                    style={{ background: 'radial-gradient(circle,#ea6c0a,transparent 70%)' }}/>
+                <div className="absolute bottom-1/4 right-1/3 w-64 h-64 rounded-full opacity-5"
+                    style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}/>
+            </div>
+
+            <div className="relative w-full max-w-md mx-4">
+                {/* Card */}
+                <div className="rounded-2xl p-8"
+                    style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+
+                    {/* Logo / title */}
+                    <div className="text-center mb-8">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                            style={{ background: '#ea6c0a' }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </div>
+                        <h1 className="text-xl font-bold text-slate-100">Admin panel</h1>
+                        <p className="text-slate-500 text-sm mt-1">Tizimga kirish</p>
+                    </div>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        {/* Phone */}
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                                Telefon raqam
+                            </label>
+                            <input
+                                type="tel"
+                                placeholder="+998901234567"
+                                value={phone_number}
+                                onChange={e => setPhone(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl text-sm text-slate-100 outline-none transition-all"
+                                style={{
+                                    background: '#1e293b',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                }}
+                                onFocus={e => e.target.style.borderColor = 'rgba(234,108,10,0.6)'}
+                                onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                required
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                                Parol
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type={showPass ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    className="w-full px-4 py-2.5 pr-11 rounded-xl text-sm text-slate-100 outline-none transition-all"
+                                    style={{
+                                        background: '#1e293b',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                    }}
+                                    onFocus={e => e.target.style.borderColor = 'rgba(234,108,10,0.6)'}
+                                    onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                    required
+                                />
+                                <button type="button" tabIndex={-1}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                    onClick={() => setShowPass(v => !v)}>
+                                    {showPass ? <FaEyeSlash size={16}/> : <FaEye size={16}/>}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Error */}
+                        {error && (
+                            <div className="flex items-center gap-2 text-xs text-red-400 rounded-lg px-3 py-2"
+                                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Submit */}
+                        <button type="submit" disabled={loading}
+                            className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200
+                                hover:opacity-90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                            style={{ background: loading ? '#c2410c' : '#ea6c0a', boxShadow: '0 4px 20px rgba(234,108,10,0.3)' }}>
+                            {loading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                    </svg>
+                                    Yuklanmoqda...
+                                </span>
+                            ) : "Kirish"}
+                        </button>
+                    </form>
+                </div>
+
+                <p className="text-center text-slate-700 text-xs mt-5">
+                    Surxondaryo viloyati umumta&apos;lim maktabi
+                </p>
+            </div>
         </div>
-      </form>
-    </div>
-  );
-};
-
-export default Login;
+    );
+}

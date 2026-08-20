@@ -1,4 +1,5 @@
-import axios from 'axios'
-axios.defaults.baseURL = 'https://api.ticty.uz/api'
+import axios from 'axios';
 
-export default axios
+axios.defaults.baseURL = 'http://167.86.110.132:3002';
+
+export default axios;

@@ -1,225 +1,349 @@
-import React, { useState } from "react";
-import { IoLogoReact } from "react-icons/io5";
-import { FaChartPie } from "react-icons/fa6";
-import { TiMessages } from "react-icons/ti";
-import { MdPermMedia } from "react-icons/md";
-import { MdFindInPage } from "react-icons/md";
-import { IoPeopleSharp } from "react-icons/io5";
-import Logo from '../img/Logowhite.png'
-
-import {
-  FaBuilding,
-  FaHandshake,
-  FaHome,
-  FaChevronDown,
-  FaChevronRight,
-} from "react-icons/fa";
-import { BsFillPostcardFill } from "react-icons/bs";
-
-import {
-  TbCategory,
-  TbNews,
-  TbClipboardList,
-  TbWorld,
-} from "react-icons/tb";
-import {
-  MdRequestPage,
-  MdBusiness,
-} from "react-icons/md";
-import { AiOutlineInteraction, AiOutlineFileText } from "react-icons/ai";
-import { RiTeamFill } from "react-icons/ri";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { MdChevronLeft, MdChevronRight as MdRight } from "react-icons/md";
 import { RiLogoutBoxLine } from "react-icons/ri";
-import { GrSchedule } from "react-icons/gr";
+import {
+    MdDashboard, MdCampaign, MdContactMail, MdViewCarousel,
+    MdRestaurantMenu, MdGroups, MdPhone, MdEvent, MdPermMedia,
+    MdPeople, MdNewspaper, MdPages, MdCalendarMonth,
+    MdLink, MdAdminPanelSettings, MdSchool, MdFolderOpen,
+} from "react-icons/md";
+import { TbNews } from "react-icons/tb";
 
-const menuItems = [
-  { name: "Asosiy", path: "/admin", icon: <FaHome className="text-lg" /> },
-  {
-    name: "Murojaatlar",
-    path: "/admin/message-user",
-    icon: <TiMessages className="text-lg" />,
-  },
-  {
-    name: "Menular", // Kategoriya
-    path: "/admin/categories",
-    icon: <TbCategory className="text-lg" />,
-  },
-  {
-    name: "Yangiliklar",
-    subItems: [
-      { name: "Barcha yangiliklar", path: "/admin/news" },
-      { name: "Yangilik yaratish", path: "/admin/news/create" },
-    ],
-    path: "/admin/news",
-    icon: <TbNews className="text-lg" />,
-  },
-  {
-    name: "Statik Sahifalar",
-    subItems: [
-      { name: "Xalqaro aloqalar", path: "/admin/international" }, 
-      { name: "Biz haqimizda", path: "/admin/aboutus" },
-      { name: "Hamkorlarimiz", path: "/admin/OurPartners" },
-      {
-        name: "Bolimlar",
-        path: "/admin/sections",
-      },
-      { name: "Markazlar", path: "/admin/centers" },
+const ACCENT     = '#ea6c0a';
+const BG         = '#0f172a';
+const BG_ITEM    = 'rgba(255,255,255,0.06)';
+const TEXT       = '#cbd5e1';      /* normal item text — visible on dark */
+const TEXT_MUTED = '#64748b';      /* sub labels, collapse btn */
+const TEXT_ACTIVE= '#ffffff';
+const BORDER     = 'rgba(255,255,255,0.07)';
 
-      {
-        name: "Rekvizitlar",
-        path: "/admin/recvizits",
-      },
-      {
-        name: "Interakriv Hizmatlar",
-        path: "/admin/Interactives/Services",
-      },
-    ],
-    path: "/admin/events",
-    icon: <MdFindInPage className="text-lg" />,
-  },
-  {
-    name: "Dinamik Sahifalar",
-    subItems: [
-      { name: "Barcha sahifalar", path: "/admin/post" },
-    ],
-    path: "/admin/events",
-    icon: <MdFindInPage className="text-lg" />,
-  },
-  {
-    name: "Rahbariyat",
-    subItems: [
-   { name: "Foto medialar", path: "/admin/photo-media" },
-      { name: "Video medialar", path: "/admin/video-media" },
+/* ─── grouped menu ───────────────────────────────────────────── */
+const MENU = [
+    /* single */
+    { name: "Asosiy",   path: "/admin",              icon: MdDashboard },
 
-      { name: "Rahbariyat", path: "/admin/management", },
-      {
-        name: "Bo'sh ish o'rinlari",
-        path: "/admin/vacancies",
-      },
-      {
-        name: "Statistika",
-        path: "/admin/statistics",
-      },
-      {
-        name: "Marosimlar Jadvali",
-        path: "/admin/schedule-event",
-      },
+    /* group: Kontent */
+    {
+        group: "Kontent",
+        items: [
+            { name: "Yangiliklar",     icon: TbNews,        subItems: [
+                { name: "Barcha yangiliklar", path: "/admin/news" },
+                { name: "Yangilik yaratish",  path: "/admin/news/create" },
+            ]},
+            { name: "E'lonlar",        icon: MdCampaign,    path: "/admin/announcements" },
+            { name: "Sahifalar",       icon: MdPages,       path: "/admin/post" },
+            { name: "Maktab gazetasi", icon: MdNewspaper,   path: "/admin/newspapers" },
+            { name: "Foydali linklar", icon: MdLink,        path: "/admin/useful-links" },
+        ],
+    },
 
+    /* group: Tadbirlar */
+    {
+        group: "Tadbirlar",
+        items: [
+            { name: "Tadbirlar",              icon: MdEvent,         path: "/admin/events" },
+            { name: "Jadvallar",              icon: MdCalendarMonth, path: "/admin/schedule-event" },
+            { name: "Ota-ona uchrashuvlari",  icon: MdGroups,        path: "/admin/meetings" },
+        ],
+    },
 
-    ],
-    path: "/admin/events",
-    icon: <IoPeopleSharp className="text-lg" />,
-  },
-  {
-    name: "Ochiq ma'lumotlar",
-    subItems: [
-      { name: "Ochiq Malumotlar", path: "/admin/open-data" },
+    /* group: Media */
+    {
+        group: "Media",
+        items: [
+            { name: "Media",     icon: MdPermMedia, subItems: [
+                { name: "Foto medialar",  path: "/admin/photo-media" },
+                { name: "Video medialar", path: "/admin/video-media" },
+            ]},
+            { name: "Bannerlar", icon: MdViewCarousel, path: "/admin/banners" },
+        ],
+    },
 
-      { name: "Korrupsiyaga qarshi", path: "/admin/against-corrution" },
-      { name: "Me'yoriy hujjatlar", path: "/admin/regulatory-doc" },
-      {
-        name: "Murojaatlarni ko‘rib chiqish tartibi",
-        path: "/admin/review",
-      },
+    {
+        group: "Qabul",
+        items: [
+            { name: "Onlayn Qabul", icon: MdSchool, subItems: [
+                { name: "Qabul arizalari",  path: "/admin/admissions" },
+                { name: "Qabul hujjatlari", path: "/admin/required-documents" },
+            ]},
+            { name: "Hujjatlar",    icon: MdFolderOpen, path: "/admin/regulatory-doc" },
+        ],
+    },
 
-    ],
-    path: "/admin/events",
-    icon: <AiOutlineFileText className="text-lg" />,
-  },
+    /* group: Xodimlar */
+    {
+        group: "Xodimlar",
+        items: [
+            { name: "Xodimlar",     icon: MdPeople,  path: "/admin/management" },
+            { name: "To'garaklar",  icon: MdGroups,  path: "/admin/clubs" },
+        ],
+    },
+
+    /* group: Aloqa */
+    {
+        group: "Aloqa",
+        items: [
+            { name: "Qayta aloqa",         icon: MdContactMail, path: "/admin/message-user" },
+            { name: "Murojaatlar",         icon: MdContactMail, path: "/admin/contact-messages" },
+            { name: "Aloqa ma'lumotlari",  icon: MdPhone,       path: "/admin/contact-info" },
+        ],
+    },
+
+    /* group: Oshxona */
+    {
+        group: "Oshxona",
+        items: [
+            { name: "Oshxona menyusi", icon: MdRestaurantMenu, path: "/admin/canteen-menu" },
+        ],
+    },
 ];
 
-export default function Sidebar({ isCollapsed, setIsCollapsed, handleLogOut }) {
-  const location = useLocation();
-  const [openAccordion, setOpenAccordion] = useState(null);
+const SUPER_ITEMS = [
+    { name: "Foydalanuvchilar", icon: MdAdminPanelSettings, path: "/admin/users" },
+];
 
-  const toggleAccordion = (index) => {
-    setOpenAccordion(openAccordion === index ? null : index);
-  };
+/* ─── single nav item ────────────────────────────────────────── */
+function NavItem({ item, isCollapsed, openKey, setOpenKey }) {
+    const location = useLocation();
+    const Icon = item.icon;
+    const isOpen = openKey === item.name;
 
+    const isActive = item.path
+        ? location.pathname === item.path
+        : item.subItems?.some(s => location.pathname.startsWith(s.path));
 
-  return (
-    <div
-      className={`h-screen bg-lb text-white transition-all duration-300 overflow-y-auto ${isCollapsed ? "w-20" : "w-64"
-        } p-4 shadow-lg flex flex-col justify-between fixed z-50 `}
-    >
-      <div>
-        <img className="w-[100px] mx-auto mb-[20px]" src={Logo} alt="Foto" />
-        <div
-          className={`text-xl font-semibold text-center flex items-center justify-center mb-8 ${isCollapsed ? "" : "hidden"
-            }`}
-        >
-        </div>
-        <ul className="space-y-2">
-          {menuItems.map((item, index) =>
-            item.subItems ? (
-              <li key={index}>
-                <button
-                  onClick={() => toggleAccordion(index)}
-                  className="flex items-center justify-between w-full p-2 hover:bg-blue-700 rounded-md"
-                >
-                  <div className="flex items-center gap-4">
-                    {item.icon}
-                    {!isCollapsed && (
-                      <span className="text-sm min-w-5">{item.name}</span>
-                    )}
-                  </div>
-                  {!isCollapsed && (
-                    <FaChevronDown
-                      className={`text-sm transition-transform ${openAccordion === index ? "rotate-180" : ""
-                        }`}
-                    />
-                  )}
-                </button>
-                {openAccordion === index && (
-                  <ul className="pl-6 mt-2 space-y-1">
-                    {item.subItems.map((subItem, subIndex) => (
-                      <Link
-                        key={subIndex}
-                        to={subItem.path}
-                        className={`flex items-center gap-2 p-2 text-sm rounded-md hover:bg-blue-700 ${location.pathname === subItem.path
-                          ? "!bg-blue-600"
-                          : ""
-                          }`}
-                      >
-                        <FaChevronRight />
-                        {subItem.name}
-                      </Link>
-                    ))}
-                  </ul>
+    /* leaf */
+    if (!item.subItems) {
+        return (
+            <Link to={item.path} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: isCollapsed ? '9px 0' : '8px 10px',
+                borderRadius: 8, textDecoration: 'none',
+                background: isActive ? ACCENT : 'transparent',
+                color: isActive ? TEXT_ACTIVE : TEXT,
+                fontSize: 13, fontWeight: isActive ? 600 : 400,
+                transition: 'background .15s, color .15s',
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+            }}
+            onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = BG_ITEM; }}
+            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+            >
+                <Icon style={{ fontSize: 16, flexShrink: 0 }} />
+                {!isCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>}
+            </Link>
+        );
+    }
+
+    /* dropdown */
+    return (
+        <div>
+            <button
+                onClick={() => setOpenKey(isOpen ? null : item.name)}
+                style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: isCollapsed ? '9px 0' : '8px 10px',
+                    borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: isActive && !isOpen ? 'rgba(234,108,10,0.15)' : 'transparent',
+                    color: isActive ? ACCENT : TEXT,
+                    fontSize: 13, fontWeight: isActive ? 600 : 400,
+                    transition: 'background .15s, color .15s',
+                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                }}
+                onMouseEnter={e => { if (!isActive || isOpen) e.currentTarget.style.background = BG_ITEM; }}
+                onMouseLeave={e => { e.currentTarget.style.background = (isActive && !isOpen) ? 'rgba(234,108,10,0.15)' : 'transparent'; }}
+            >
+                <Icon style={{ fontSize: 16, flexShrink: 0 }} />
+                {!isCollapsed && (
+                    <>
+                        <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.name}
+                        </span>
+                        <FaChevronDown style={{
+                            fontSize: 10, flexShrink: 0,
+                            transform: isOpen ? 'rotate(180deg)' : 'none',
+                            transition: 'transform .2s',
+                            color: TEXT_MUTED,
+                        }} />
+                    </>
                 )}
-              </li>
-            ) : (
-              <Link
-                key={index}
-                to={item.path}
-                className={`flex items-center gap-4 p-2 rounded-md hover:bg-blue-700 ${location.pathname === item.path ? "bg-blue-600" : ""
-                  }`}
-              >
-                {item.icon}
-                {!isCollapsed && <span className="text-sm">{item.name}</span>}
-              </Link>
-            )
-          )}
-          <li
-            onClick={handleLogOut}
-            className="flex items-center hover:bg-blue-700 gap-4 p-2 cursor-pointer rounded-md"
-          >
-            <RiLogoutBoxLine className="text-xl" />
-            {!isCollapsed && <span className="text-sm">Chiqish</span>}
-          </li>
-        </ul>
-      </div>
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="flex items-center justify-center p-2 mt-6 bg-blue-500 hover:bg-blue-700 rounded-md focus:outline-none"
-      >
-        {isCollapsed ? (
-          <MdChevronRight className="text-2xl" />
-        ) : (
-          <MdChevronLeft className="text-2xl" />
-        )}
-      </button>
-    </div>
-  );
+            </button>
+
+            {isOpen && !isCollapsed && (
+                <div style={{
+                    marginTop: 2, marginLeft: 14,
+                    borderLeft: `1px solid ${BORDER}`,
+                    paddingLeft: 12, paddingBottom: 2,
+                }}>
+                    {item.subItems.map(sub => {
+                        const subActive = location.pathname === sub.path;
+                        return (
+                            <Link key={sub.path} to={sub.path} style={{
+                                display: 'flex', alignItems: 'center', gap: 7,
+                                padding: '6px 8px', borderRadius: 6, textDecoration: 'none',
+                                fontSize: 12, fontWeight: subActive ? 600 : 400,
+                                color: subActive ? ACCENT : TEXT_MUTED,
+                                background: subActive ? 'rgba(234,108,10,0.1)' : 'transparent',
+                                transition: 'all .15s',
+                            }}
+                            onMouseEnter={e => { if (!subActive) { e.currentTarget.style.background = BG_ITEM; e.currentTarget.style.color = TEXT; } }}
+                            onMouseLeave={e => { if (!subActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = TEXT_MUTED; } }}
+                            >
+                                <FaChevronRight style={{ fontSize: 8, opacity: 0.5, flexShrink: 0 }} />
+                                {sub.name}
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ─── group label ────────────────────────────────────────────── */
+function GroupLabel({ label, isCollapsed }) {
+    if (isCollapsed) return (
+        <div style={{
+            height: 1, background: BORDER, margin: '8px 0',
+        }} />
+    );
+    return (
+        <div style={{
+            padding: '10px 10px 4px',
+            fontSize: 9, fontWeight: 700, letterSpacing: '.1em',
+            textTransform: 'uppercase', color: TEXT_MUTED,
+            userSelect: 'none',
+        }}>
+            {label}
+        </div>
+    );
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────── */
+export default function Sidebar({ isCollapsed, setIsCollapsed, handleLogOut, role }) {
+    const [openKey, setOpenKey] = useState(null);
+    const isSuperAdmin = role === "SUPER_ADMIN";
+    const user = JSON.parse(localStorage.getItem("auth-user") || "{}");
+
+    return (
+        <aside style={{
+            height: '100vh', display: 'flex', flexDirection: 'column',
+            transition: 'width .3s', overflow: 'hidden', position: 'fixed',
+            zIndex: 50, background: BG, borderRight: `1px solid ${BORDER}`,
+            width: isCollapsed ? 64 : 240,
+        }}>
+
+            {/* ── logo ─────────────────────────────────────── */}
+            <div style={{
+                flexShrink: 0, display: 'flex', alignItems: 'center',
+                gap: 10, padding: isCollapsed ? '18px 0' : '16px 16px',
+                borderBottom: `1px solid ${BORDER}`,
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+            }}>
+                <div style={{
+                    width: 32, height: 32, borderRadius: 8, background: ACCENT,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="white" strokeWidth="2.2" strokeLinecap="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                    </svg>
+                </div>
+                {!isCollapsed && (
+                    <div style={{ overflow: 'hidden' }}>
+                        <p style={{ color: '#fff', fontSize: 13, fontWeight: 700, lineHeight: 1.2, margin: 0 }}>
+                            Admin panel
+                        </p>
+                        <p style={{ color: TEXT_MUTED, fontSize: 10, margin: 0 }}>
+                            Boshqaruv tizimi
+                        </p>
+                    </div>
+                )}
+            </div>
+
+       
+            {/* ── nav ──────────────────────────────────────── */}
+            <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 1 }}>
+
+                {/* single top item — Asosiy */}
+                <NavItem
+                    item={MENU[0]}
+                    isCollapsed={isCollapsed}
+                    openKey={openKey}
+                    setOpenKey={setOpenKey}
+                />
+
+                {/* groups */}
+                {MENU.slice(1).map(section => (
+                    <div key={section.group}>
+                        <GroupLabel label={section.group} isCollapsed={isCollapsed} />
+                        {section.items.map(item => (
+                            <NavItem
+                                key={item.name}
+                                item={item}
+                                isCollapsed={isCollapsed}
+                                openKey={openKey}
+                                setOpenKey={setOpenKey}
+                            />
+                        ))}
+                    </div>
+                ))}
+
+                {/* super admin extra */}
+                {isSuperAdmin && (
+                    <div>
+                        <GroupLabel label="Boshqaruv" isCollapsed={isCollapsed} />
+                        {SUPER_ITEMS.map(item => (
+                            <NavItem
+                                key={item.name}
+                                item={item}
+                                isCollapsed={isCollapsed}
+                                openKey={openKey}
+                                setOpenKey={setOpenKey}
+                            />
+                        ))}
+                    </div>
+                )}
+            </nav>
+
+            {/* ── bottom ───────────────────────────────────── */}
+            <div style={{
+                flexShrink: 0, padding: '10px 10px 14px',
+                borderTop: `1px solid ${BORDER}`,
+                display: 'flex', flexDirection: 'column', gap: 2,
+            }}>
+                {/* logout */}
+                <button onClick={handleLogOut} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: isCollapsed ? '9px 0' : '8px 10px',
+                    borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: 'transparent', color: TEXT_MUTED,
+                    fontSize: 13, transition: 'all .15s',
+                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#f87171'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = TEXT_MUTED; }}
+                >
+                    <RiLogoutBoxLine style={{ fontSize: 16, flexShrink: 0 }} />
+                    {!isCollapsed && <span>Chiqish</span>}
+                </button>
+
+                {/* collapse toggle */}
+                <button onClick={() => setIsCollapsed(v => !v)} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '7px', borderRadius: 8, border: 'none',
+                    cursor: 'pointer', background: 'transparent', color: TEXT_MUTED,
+                    fontSize: 18, transition: 'all .15s', width: '100%',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = BG_ITEM; e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = TEXT_MUTED; }}
+                >
+                    {isCollapsed ? <MdRight /> : <MdChevronLeft />}
+                </button>
+            </div>
+        </aside>
+    );
 }
