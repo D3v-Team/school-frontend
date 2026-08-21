@@ -12,7 +12,7 @@ export default function Post() {
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [activeTab, setActiveTab] = useState("uz");
+  const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 

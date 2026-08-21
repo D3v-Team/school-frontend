@@ -165,8 +165,8 @@ function FormModal({ item, onClose, onSaved }) {
 
     /* focus state */
     const focusRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { focusRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { focusRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!focusRef.current[k];
 
     const handleSave = async () => {
@@ -176,7 +176,10 @@ function FormModal({ item, onClose, onSaved }) {
         }
         setSaving(true); setError('');
         try {
-            const payload = { ...form };
+            const payload = {
+                ...form,
+                birth_date: form.birth_date ? `${form.birth_date}T00:00:00.000Z` : undefined,
+            };
             if (isEdit) {
                 await $api.patch(`/api/admission/admin/${item.id}`, payload);
             } else {

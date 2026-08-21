@@ -26,7 +26,7 @@ export default function DepartmenEdit() {
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [name, setName] = useState('')
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
     const [loading, setLoading] = useState(false)
     const [loading2, setLoading2] = useState(true)
     const [status, setStatus] = useState('')

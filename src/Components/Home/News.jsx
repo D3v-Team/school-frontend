@@ -1,69 +1,19 @@
-import React from "react";
-import { useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import { useEffect as useEffectGsap, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ImageOff } from "lucide-react";
 import AccordionGallery from "../AccordionGallery";
+import pub, { getLang, formatDate, mediaUrl } from "../../utils/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
 /* Static placeholder — backend connects later */
-const placeholderNews = [
-    {
-        id: 1,
-        date: "15.08.2026",
-        view: 124,
-        image: null,
-        titleUz: "Yangi o'quv yili boshlanishiga tayyorgarlik ko'rilmoqda",
-        descUz: "Maktabimizda yangi o'quv yiliga tayyorgarlik ishlari jadal sur'atlarda olib borilmoqda.",
-        galleryImg: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=900&q=80",
-    },
-    {
-        id: 2,
-        date: "10.08.2026",
-        view: 89,
-        image: null,
-        titleUz: "Olimpiada g'oliblarini tabriklash marosimi bo'lib o'tdi",
-        descUz: "Surxondaryo viloyati olimpiadalarida yuqori o'rinlarni egallagan o'quvchilarimiz taqdirlandilar.",
-        galleryImg: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&q=80",
-    },
-    {
-        id: 3,
-        date: "05.08.2026",
-        view: 67,
-        image: null,
-        titleUz: "Maktab kutubxonasi yangilandi",
-        descUz: "Zamonaviy o'quv adabiyotlari va elektron resurslar bilan boyitilgan kutubxona ochildi.",
-        galleryImg: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=900&q=80",
-    },
-    {
-        id: 4,
-        date: "01.08.2026",
-        view: 53,
-        image: null,
-        titleUz: "Sport musobaqalarida g'alaba qozondik",
-        descUz: "O'quvchilarimiz viloyat sport musobaqalarida birinchi o'rinni egallashdi.",
-        galleryImg: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=900&q=80",
-    },
-    {
-        id: 5,
-        date: "28.07.2026",
-        view: 41,
-        image: null,
-        titleUz: "Robototexnika to'garagi ochildi",
-        descUz: "Maktabimizda zamonaviy robototexnika va dasturlash to'garagi faoliyat boshladi.",
-        galleryImg: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=900&q=80",
-    },
-];
+const placeholderNews = [];
 
-const galleryItems = placeholderNews.map(n => ({
-    image: n.galleryImg,
-    label: n.titleUz,
-    link: `/yangilik/${n.id}`,
-}));
-
-const NewsCard = ({ item }) => (
+const NewsCard = ({ item, lang }) => (
     <NavLink
         to={`/yangilik/${item.id}`}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -86,42 +36,59 @@ const NewsCard = ({ item }) => (
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
             }}
         >
-            {/* image area */}
             <div className="h-[160px] flex items-center justify-center relative overflow-hidden"
                 style={{ background: 'linear-gradient(135deg,#1a1f2e,#0d1117)' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                </svg>
+                {item.cover_image ? (
+                    <img src={mediaUrl(item.cover_image)} alt=""
+                        className="w-full h-full object-cover" />
+                ) : (
+                    <ImageOff size={32} strokeWidth={1.2} color="rgba(255,255,255,0.15)" aria-hidden="true" />
+                )}
                 <div className="absolute top-3 left-3 text-white text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider"
                     style={{ background: '#ea6c0a' }}>
                     Yangilik
                 </div>
             </div>
-            {/* content */}
             <div className="p-4">
                 <div className="flex items-center gap-3 text-slate-600 text-xs mb-2.5">
-                    <span>{item.date}</span>
-                    <span>·</span>
-                    <span>{item.view} ko'rilgan</span>
+                    <span>{formatDate(item.created_at)}</span>
                 </div>
                 <h3 className="font-semibold text-slate-100 text-sm leading-snug line-clamp-2 mb-2 group-hover:text-orange-400 transition-colors duration-200">
-                    {item.titleUz}
+                    {getLang(item, 'title', lang)}
                 </h3>
-                <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">{item.descUz}</p>
+                <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
+                    {getLang(item, 'content', lang)?.replace(/<[^>]+>/g, '').slice(0, 100)}
+                </p>
             </div>
         </div>
     </NavLink>
 );
 
 const News = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const headerRef = useRef(null);
     const cardsRef  = useRef(null);
     const galRef    = useRef(null);
+    const [news, setNews]   = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        pub.get('/api/news', { params: { page: 1, limit: 6, sortBy: 'created_at', sortOrder: 'desc', is_public: true } })
+            .then(res => {
+                const d = res.data;
+                setNews(d?.data || d?.items || []);
+            })
+            .catch(() => setNews([]))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const galleryItems = news.slice(0, 5).map(n => ({
+        image: mediaUrl(n.cover_image) || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=900&q=80',
+        label: getLang(n, 'title', i18n.language),
+        link: `/yangilik/${n.id}`,
+    }));
+
+    useEffectGsap(() => {
         const ctx = gsap.context(() => {
             gsap.fromTo(headerRef.current,
                 { opacity: 0, y: 28 },
@@ -140,7 +107,7 @@ const News = () => {
             );
         });
         return () => ctx.revert();
-    }, []);
+    }, [news]);
 
     return (
         <section style={{ background: '#0a0f1c' }} className="py-16">
@@ -191,9 +158,9 @@ const News = () => {
                 </div>
 
                 {/* Small news cards row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {placeholderNews.slice(0, 3).map(news => (
-                        <NewsCard key={news.id} item={news} />
+                <div ref={cardsRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {news.slice(0, 3).map(item => (
+                        <NewsCard key={item.id} item={item} lang={i18n.language} />
                     ))}
                 </div>
             </div>

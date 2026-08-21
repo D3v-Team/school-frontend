@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { mediaUrl, useLang } from "../utils/api";
 import {
     C, Spin, fmtDate, Lbl, iStyle, taStyle, LANGS,
     PBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
     SearchBar, FilterPills, Pagination,
-    LoadingRow, EmptyRow, PageHeader, StatusBadge, Toggle, TableHead, TableCard,
+    LoadingRow, EmptyRow, PageHeader, StatusBadge, Toggle, TableHead, TableCard, LangPills,
 } from "../AdminComponents/ui";
 
 const LIMIT = 10;
@@ -37,14 +38,14 @@ function EventForm({ item, onClose, onSaved }) {
     });
     const [activeLang, setActiveLang] = useState('latin');
     const [imgFile,    setImgFile]    = useState(null);
-    const [preview,    setPreview]    = useState(item?.cover_image || null);
+    const [preview,    setPreview]    = useState(item?.cover_image ? mediaUrl(item.cover_image) : null);
     const [saving,     setSaving]     = useState(false);
     const [error,      setError]      = useState('');
     const [errors,     setErrors]     = useState({});
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -197,7 +198,7 @@ function EventForm({ item, onClose, onSaved }) {
                                 <div style={{ position: 'relative' }}>
                                     <img src={preview} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
                                     <button type="button"
-                                        onClick={() => { setImgFile(null); setPreview(isEdit ? item?.cover_image || null : null); if (imgRef.current) imgRef.current.value = ''; }}
+                                        onClick={() => { setImgFile(null); setPreview(isEdit ? (item?.cover_image ? mediaUrl(item.cover_image) : null) : null); if (imgRef.current) imgRef.current.value = ''; }}
                                         style={{ position: 'absolute', top: 5, right: 5, width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                                 </div>
                             ) : (
@@ -258,6 +259,7 @@ function EventForm({ item, onClose, onSaved }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function AdminEvents() {
+    const lang = useLang();
     const [items,    setItems]    = useState([]);
     const [total,    setTotal]    = useState(0);
     const [page,     setPage]     = useState(1);
@@ -267,25 +269,32 @@ export default function AdminEvents() {
     const [loading,  setLoading]  = useState(true);
     const [modal,    setModal]    = useState(null);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim())  params.search    = search.trim();
-            if (typeFilt)       params.type      = typeFilt;
-            if (pubFilt !== '') params.is_public = pubFilt;
-            const res = await $api.get('/api/events/admin', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search, typeFilt, pubFilt]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim())  params.search    = search.trim();
+                if (typeFilt)       params.type      = typeFilt;
+                if (pubFilt !== '') params.is_public = pubFilt;
+                const res = await $api.get('/api/events/admin', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, typeFilt, pubFilt, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
-    const refresh = () => { setModal(null); fetchData(); };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     const selectSt = active => ({
         padding: '8px 32px 8px 12px', borderRadius: 9, fontSize: 13,
@@ -312,8 +321,8 @@ export default function AdminEvents() {
                 <div style={{ display: 'flex', gap: 5 }}>
                     {[
                         { val: '',      label: 'Barchasi' },
-                        { val: 'true',  label: '✓ Ochiq',    color: C.green, bg: C.gBg, border: C.gBdr  },
-                        { val: 'false', label: '○ Yashirin', color: C.muted, bg: C.bg,  border: C.border },
+                        { val: 'true',  label: 'Ochiq',    color: C.green, bg: C.gBg, border: C.gBdr  },
+                        { val: 'false', label: 'Yashirin', color: C.muted, bg: C.bg,  border: C.border },
                     ].map(opt => {
                         const active = pubFilt === opt.val;
                         return (
@@ -338,14 +347,14 @@ export default function AdminEvents() {
                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                                     {item.cover_image ? (
-                                        <img src={item.cover_image} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.border}`, flexShrink: 0 }} />
+                                        <img src={mediaUrl(item.cover_image)} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.border}`, flexShrink: 0 }} />
                                     ) : (
                                         <div style={{ width: 40, height: 28, borderRadius: 6, flexShrink: 0, background: tp.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             <span style={{ fontSize: 14 }}>📅</span>
                                         </div>
                                     )}
                                     <span style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {item.title_latin || item.title_cyril || '—'}
+                                        {item[`title_${lang}`] || item.title_latin || '—'}
                                     </span>
                                 </div>
                                 <StatusBadge label={tp.label} bg={tp.bg} color={tp.color} border={tp.border} />

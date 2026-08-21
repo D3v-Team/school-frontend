@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { $api } from "../utils";
+import { mediaUrl } from "../utils/api";
 import CustomDataTable from "../lib/custom-data-table";
 import Loader from "../lib/loader";
 import { AddPhoto } from "../AdminComponents/photo-gallery/add-photo";
@@ -11,7 +12,7 @@ export default function PhotoMedia() {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [activeTab, setActiveTab] = useState("uz");
+  const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
 
   const fetchData = async () => {
     try {
@@ -43,7 +44,7 @@ export default function PhotoMedia() {
       name: "Rasm",
       selector: (row) => (
         row.image?.length > 0 ? (
-          <img src={row.image[row.image.length - 1].url} alt="Gallery" className="w-44 my-3 object-cover rounded" />
+          <img src={mediaUrl(row.image[row.image.length - 1].url)} alt="Gallery" className="w-44 my-3 object-cover rounded" />
         ) : (
           "Rasm yo'q"
         )

@@ -1,63 +1,65 @@
 import { NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const ACCENT = '#ea6c0a';
 
 const SECTIONS = [
     {
         key: 'umumiy',
-        title: "Umumiy ma'lumot",
+        title: 'Umumiy_malumot',
         icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
         links: [
-            { to: '/biz-haqimizda',      label: 'Biz haqimizda' },
-            { to: '/rahbariyat',          label: 'Rahbariyat' },
-            { to: "/bo'lim-markazlar",    label: "Bo'lim va markazlar" },
-            { to: '/rekvizitlar',         label: 'Rekvizitlar' },
-            { to: "/ochiq-ma'lumotlar",   label: "Ochiq ma'lumotlar" },
-            { to: '/korrupsiyaga-kurash', label: 'Korrupsiyaga qarshi' },
-            { to: '/hujjatlar',           label: "Me'yoriy hujjatlar" },
-            { to: '/bosh-ish-orni',       label: "Bo'sh ish o'rinlari" },
-            { to: '/xalqaro-aloqalar',    label: 'Xalqaro aloqalar' },
-            { to: '/hamkorlarimiz',       label: 'Hamkorlarimiz' },
+            { to: '/biz-haqimizda', label: 'biz_haqimizda' },
+            { to: '/rahbariyat', label: 'rahbariyat' },
+            { to: "/bo'lim-markazlar", label: 'bolim_markazlar' },
+            { to: '/rekvizitlar', label: 'rekvizitlar' },
+            { to: "/ochiq-ma'lumotlar", label: 'ochiq_malumotlar' },
+            { to: '/korrupsiyaga-kurash', label: 'korrupsiya_kurash' },
+            { to: '/hujjatlar', label: 'hujjatlar' },
+            { to: '/bosh-ish-orni', label: 'bosh_ish_orni' },
+            { to: '/xalqaro-aloqalar', label: 'xalqaro_aloqalar' },
+            { to: '/hamkorlarimiz', label: 'hamkorlarimiz' },
         ],
     },
     {
         key: 'talim',
-        title: "Ta'lim",
+        title: 'Talim',
         icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
         links: [
-            { to: "/bo'lim-markazlar", label: "Bo'lim va markazlar" },
-            { to: '/hujjatlar',        label: "Me'yoriy hujjatlar" },
-            { to: '/hisobot',          label: 'Moliyaviy hisobot' },
-            { to: '/korrupsiyaga-kurash', label: 'Korrupsiyaga qarshi' },
-            { to: '/bosh-ish-orni',    label: "Bo'sh ish o'rinlari" },
+            { to: "/bo'lim-markazlar", label: 'bolim_markazlar' },
+            { to: '/hujjatlar', label: 'hujjatlar' },
+            { to: '/hisobot', label: 'Moliyaviyhisobot' },
+            { to: '/korrupsiyaga-kurash', label: 'korrupsiya_kurash' },
+            { to: '/bosh-ish-orni', label: 'bosh_ish_orni' },
         ],
     },
     {
         key: 'oquvchilar',
-        title: "O'quvchilar",
+        title: 'Oquvchilar',
         icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
         links: [
-            { to: '/virtual-kabinet',   label: 'Direktor virtual qabulxonasi' },
-            { to: '/murojaatlar',       label: "Murojaatlarni ko'rib chiqish" },
-            { to: '/fotogalereya',      label: 'Fotogalereya' },
-            { to: '/Videogalereya',     label: 'Video galereya' },
+            { to: '/virtual-kabinet', label: 'virtual_kabinet' },
+            { to: '/murojaatlar', label: 'murojaatlar' },
+            { to: '/fotogalereya', label: 'Fotogalereya' },
+            { to: '/Videogalereya', label: 'Videogalereya' },
         ],
     },
     {
         key: 'axborot',
-        title: 'Axborot xizmati',
+        title: 'Axborotxizmati',
         icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8z"/></svg>,
         links: [
             { to: '/barcha-yangiliklar', label: 'Yangiliklar' },
-            { to: '/fotogalereya',       label: 'Fotogalereya' },
-            { to: '/Videogalereya',      label: 'Video galereya' },
-            { to: "/ochiq-ma'lumotlar",  label: "Ochiq ma'lumotlar" },
+            { to: '/fotogalereya', label: 'Fotogalereya' },
+            { to: '/Videogalereya', label: 'Videogalereya' },
+            { to: "/ochiq-ma'lumotlar", label: 'ochiq_malumotlar' },
         ],
     },
 ];
 
 export default function BigModal({ isOpen, onClose, headerScrolled }) {
+    const { t } = useTranslation();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -137,7 +139,7 @@ export default function BigModal({ isOpen, onClose, headerScrolled }) {
                             <path d="M6 12v5c3 3 9 3 12 0v-5"/>
                         </svg>
                     </div>
-                    <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 14 }}>Sayt xaritasi</span>
+                    <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 14 }}>{t('Saytxaritasi')}</span>
                 </div>
                 <button onClick={onClose}
                     style={{
@@ -202,7 +204,7 @@ export default function BigModal({ isOpen, onClose, headerScrolled }) {
                                                 flexShrink: 0,
                                                 opacity: 0.6,
                                             }}/>
-                                            {link.label}
+                                            {t(link.label)}
                                         </NavLink>
                                     </li>
                                 ))}
@@ -242,7 +244,7 @@ export default function BigModal({ isOpen, onClose, headerScrolled }) {
                         className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm
                             font-semibold text-white hover:opacity-90 transition-opacity"
                         style={{ background: ACCENT }}>
-                        Bog&apos;lanish
+                        {t('boglanish')}
                         <svg width="13" height="13" viewBox="0 0 14 15" fill="none">
                             <path d="M1.16666 7.50002H12.8333M12.8333 7.50002L6.99999 1.66669M12.8333 7.50002L6.99999 13.3334"
                                 stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>

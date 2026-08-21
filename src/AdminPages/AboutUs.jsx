@@ -8,7 +8,7 @@ import Loader from "../lib/loader";
 import AboutUsDelete from "../AdminComponents/aboutUS/aboutUs-delete";
 
 export default function AdminAboutUs() {
-  const [activeTab, setActiveTab] = useState("uz");
+  const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 

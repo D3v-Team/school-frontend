@@ -25,9 +25,15 @@ export const Spin = ({ size = 16, color = C.brand }) => (
 );
 
 /* ─── date formatter ──────────────────────────────────────────── */
-export const fmtDate = d => d ? new Date(d).toLocaleDateString('uz-UZ', {
-    day: '2-digit', month: 'short', year: 'numeric',
-}) : '—';
+export const fmtDate = d => {
+    if (!d) return '—';
+    const date = new Date(d);
+    if (isNaN(date)) return '—';
+    const day   = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year  = date.getFullYear();
+    return `${day} ${month} ${year}`;
+};
 
 /* ─── label ───────────────────────────────────────────────────── */
 export const Lbl = ({ children, req }) => (
@@ -184,57 +190,61 @@ export function DeleteConfirm({ title, desc, onClose, onConfirm, loading }) {
 }
 
 /* ─── SearchBar ───────────────────────────────────────────────── */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export function SearchBar({ value, onChange, placeholder = 'Qidirish...', delay = 400 }) {
-    const [focused, setFocused] = useState(false);
+    const [focused,  setFocused]  = useState(false);
+    const [localVal, setLocalVal] = useState(value || '');
     const timer = useRef(null);
+
+    /* sync if parent resets value */
+    useEffect(() => { setLocalVal(value || ''); }, [value]);
 
     const handleChange = e => {
         const v = e.target.value;
+        setLocalVal(v);
         clearTimeout(timer.current);
         timer.current = setTimeout(() => onChange(v), delay);
-        // controlled by parent, pass raw for display
-        onChange.__raw?.(v);
+    };
+
+    const handleClear = () => {
+        setLocalVal('');
+        clearTimeout(timer.current);
+        onChange('');
     };
 
     return (
         <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: 340 }}>
             <svg style={{
                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                pointerEvents: 'none', transition: 'color .15s',
+                pointerEvents: 'none',
             }}
-                width="15" height="15" viewBox="0 0 24 24" fill="none"
+                width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke={focused ? C.brand : C.muted} strokeWidth="2.5" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
                 type="text"
-                defaultValue={value}
+                value={localVal}
                 placeholder={placeholder}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
-                onChange={e => {
-                    clearTimeout(timer.current);
-                    timer.current = setTimeout(() => onChange(e.target.value), delay);
-                }}
+                onChange={handleChange}
                 style={{
-                    width: '100%', padding: '9px 36px 9px 36px', borderRadius: 10,
+                    width: '100%', padding: '8px 32px 8px 34px', borderRadius: 9,
                     border: `1.5px solid ${focused ? C.brand : C.border}`,
                     background: C.white, fontSize: 13, color: C.text,
                     outline: 'none', boxSizing: 'border-box',
-                    boxShadow: focused ? `0 0 0 3px ${C.bBdr}` : 'none',
-                    transition: 'border-color .15s, box-shadow .15s',
+                    transition: 'border-color .15s',
                 }}
             />
-            {value && (
-                <button
-                    onClick={() => onChange('')}
+            {localVal && (
+                <button onClick={handleClear}
                     style={{
-                        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                        position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                         background: 'none', border: 'none', cursor: 'pointer',
-                        color: C.muted, padding: 2, display: 'flex',
+                        color: C.muted, padding: 2, display: 'flex', alignItems: 'center',
                     }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" strokeWidth="2.5">
@@ -468,3 +478,23 @@ export const LANGS = [
     { key: 'cyril', flag: '🇺🇿', label: 'Krill' },
     { key: 'ru',    flag: '🇷🇺', label: 'Rus'   },
 ];
+
+/* ─── LangPills — inline lang switcher for list pages ─────────── */
+export function LangPills({ lang, setLang }) {
+    return (
+        <div style={{ display: 'flex', gap: 4, padding: '4px', borderRadius: 10, background: C.bg, border: `1px solid ${C.border}` }}>
+            {LANGS.map(({ key, flag, label }) => (
+                <button key={key} type="button" onClick={() => setLang(key)}
+                    style={{
+                        padding: '5px 12px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                        fontSize: 12, fontWeight: lang === key ? 700 : 500,
+                        background: lang === key ? C.brand : 'transparent',
+                        color: lang === key ? '#fff' : C.sub, transition: 'all .15s',
+                        display: 'flex', alignItems: 'center', gap: 4,
+                    }}>
+                    {flag} {label}
+                </button>
+            ))}
+        </div>
+    );
+}

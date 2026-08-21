@@ -1,69 +1,63 @@
-
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
-import ReactLoading from "react-loading";
-import { NavLink } from "react-router-dom";
+import pub, { getLang } from "../../utils/api";
+
 export default function DocumentsHero() {
     const { i18n } = useTranslation();
-    const [data, setData] = useState([]);
+    const [data,    setData]    = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const getDoc = async () => {
-        try {
-            const response = await axios.get(`/regulatory-document`);
-            setData(response?.data?.data || []);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        getDoc();
+        pub.get('/api/documents', { params: { limit: 100, sortBy: 'created_at', sortOrder: 'desc' } })
+            .then(res => setData(res.data?.data || res.data?.items || []))
+            .catch(console.error)
+            .finally(() => setLoading(false));
     }, []);
+
+    if (loading) return (
+        <div className="flex items-center justify-center w-full h-[300px]">
+            <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+
     return (
         <section className="my-[32px]">
             <div className="Container">
-                <div className="flex items-center justify-center flex-col gap-[24px] w-full">
-                    {loading ? (
-                        <ReactLoading type="spinningBubbles" color="#000" height={100} width={100} />
-                    ) : data.length === 0 ? (
-                        <h4 >Empty data</h4>
+                <div className="flex items-center justify-center flex-col gap-[16px] w-full">
+                    {data.length === 0 ? (
+                        <p className="text-gray-400 py-10">Hujjatlar topilmadi</p>
                     ) : (
-                        data.map((item) => (
-                            <div
-                                key={item.id}
-                                className="w-full border-[1px] px-[24px] py-[18px] bg-white cursor-pointer duration-500 hover:shadow-lg rounded-[8px] flex items-center gap-[10px] justify-between"
-                            >
-                                <div>
-                                    <span>{item?.name?.[i18n.language] || "Noma’lum ma’lumot"}</span>
-                                </div>
-                                <a href={item?.file[0]?.url || item?.url} target="_blank" rel="noopener noreferrer">
-                                    <div className="text-[#A4A7AE] text-[30px]">
-                                        <svg
-                                            width="20px"
-                                            height="20px"
-                                            viewBox="0 0 20 20"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M19 7.00001L19 1.00001M19 1.00001H13M19 1.00001L10 10M8 1H5.8C4.11984 1 3.27976 1 2.63803 1.32698C2.07354 1.6146 1.6146 2.07354 1.32698 2.63803C1 3.27976 1 4.11984 1 5.8V14.2C1 15.8802 1 16.7202 1.32698 17.362C1.6146 17.9265 2.07354 18.3854 2.63803 18.673C3.27976 19 4.11984 19 5.8 19H14.2C15.8802 19 16.7202 19 17.362 18.673C17.9265 18.3854 18.3854 17.9265 18.673 17.362C19 16.7202 19 15.8802 19 14.2V12"
-                                                stroke="#A4A7AE"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
+                        data.map(item => (
+                            <div key={item.id}
+                                className="w-full border px-[24px] py-[18px] bg-white cursor-pointer hover:shadow-lg duration-300 rounded-lg flex items-center gap-3 justify-between">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    {/* file type badge */}
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-50 border border-red-100">
+                                        <span className="text-[9px] font-black text-red-500 uppercase">
+                                            {item.file_url?.split('.').pop()?.toUpperCase() || 'DOC'}
+                                        </span>
                                     </div>
-                                </a>
+                                    <span className="text-gray-800 font-medium text-[15px] truncate">
+                                        {getLang(item, 'title', i18n.language) || 'Hujjat'}
+                                    </span>
+                                </div>
+
+                                {item.file_url && (
+                                    <a href={item.file_url} target="_blank" rel="noopener noreferrer"
+                                        className="flex-shrink-0 flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        Yuklab olish
+                                    </a>
+                                )}
                             </div>
                         ))
                     )}
                 </div>
             </div>
         </section>
-    )
+    );
 }

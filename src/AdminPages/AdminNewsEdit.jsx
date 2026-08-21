@@ -10,7 +10,7 @@ import { sweetAlert } from "../utils/sweetalert";
 import Loader from "../lib/loader";
 
 export default function AdminNewsEdit() {
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
     const [selectedFile, setSelectedFile] = useState(null);
     const [fileError, setFileError] = useState("");
     const [date, setDate] = useState("");

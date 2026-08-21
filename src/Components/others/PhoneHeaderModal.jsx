@@ -7,47 +7,46 @@ const ACCENT = '#ea6c0a';
 const SECTIONS = [
     {
         key: 'umumiy',
-        title: "Umumiy ma'lumot",
+        title: 'Umumiy_malumot',
         links: [
-            { to: '/biz-haqimizda',      label: 'Biz haqimizda' },
-            { to: '/rahbariyat',          label: 'Rahbariyat' },
-            { to: '/hamkorlarimiz',       label: 'Hamkorlarimiz' },
-            { to: '/hujjatlar',           label: "Me'yoriy hujjatlar" },
-            { to: '/murojaatlar',         label: "Murojaatlarni ko'rib chiqish" },
-            { to: "/ochiq-ma'lumotlar",   label: "Ochiq ma'lumotlar" },
-            { to: "/bo'lim-markazlar",    label: "Bo'lim va markazlar" },
-            { to: '/rekvizitlar',         label: 'Rekvizitlar' },
-            { to: '/virtual-kabinet',     label: 'Direktor virtual qabulxonasi' },
-            { to: '/korrupsiyaga-kurash', label: 'Korrupsiyaga qarshi' },
-            { to: '/bosh-ish-orni',       label: "Bo'sh ish o'rinlari" },
+            { to: '/biz-haqimizda', label: 'biz_haqimizda' },
+            { to: '/rahbariyat', label: 'rahbariyat' },
+            { to: "/bo'lim-markazlar", label: 'bolim_markazlar' },
+            { to: '/rekvizitlar', label: 'rekvizitlar' },
+            { to: "/ochiq-ma'lumotlar", label: 'ochiq_malumotlar' },
+            { to: '/korrupsiyaga-kurash', label: 'korrupsiya_kurash' },
+            { to: '/hujjatlar', label: 'hujjatlar' },
+            { to: '/bosh-ish-orni', label: 'bosh_ish_orni' },
+            { to: '/xalqaro-aloqalar', label: 'xalqaro_aloqalar' },
+            { to: '/hamkorlarimiz', label: 'hamkorlarimiz' },
         ],
     },
     {
         key: 'talim',
-        title: "Ta'lim",
+        title: 'Talim',
         links: [
-            { to: "/bo'lim-markazlar", label: "Bo'lim va markazlar" },
-            { to: '/hujjatlar',        label: "Me'yoriy hujjatlar" },
-            { to: '/hisobot',          label: 'Moliyaviy hisobot' },
+            { to: "/bo'lim-markazlar", label: 'bolim_markazlar' },
+            { to: '/hujjatlar', label: 'hujjatlar' },
+            { to: '/hisobot', label: 'Moliyaviyhisobot' },
         ],
     },
     {
         key: 'oquvchilar',
         title: "O'quvchilar",
         links: [
-            { to: '/virtual-kabinet', label: 'Direktor virtual qabulxonasi' },
-            { to: '/murojaatlar',     label: "Murojaatlarni ko'rib chiqish" },
-            { to: '/fotogalereya',    label: 'Fotogalereya' },
-            { to: '/Videogalereya',   label: 'Video galereya' },
+            { to: '/virtual-kabinet', label: 'virtual_kabinet' },
+            { to: '/murojaatlar', label: 'murojaatlar' },
+            { to: '/fotogalereya', label: 'Fotogalereya' },
+            { to: '/Videogalereya', label: 'Videogalereya' },
         ],
     },
     {
         key: 'axborot',
-        title: 'Axborot xizmati',
+        title: 'Axborotxizmati',
         links: [
             { to: '/barcha-yangiliklar', label: 'Yangiliklar' },
-            { to: '/fotogalereya',       label: 'Fotogalereya' },
-            { to: '/Videogalereya',      label: 'Video galereya' },
+            { to: '/fotogalereya', label: 'Fotogalereya' },
+            { to: '/Videogalereya', label: 'Videogalereya' },
         ],
     },
 ];
@@ -129,7 +128,7 @@ export default function PhoneHeaderModal({ isOpen, onClose }) {
                                 color:      openKey === sec.key ? '#fb923c' : '#e2e8f0',
                                 background: openKey === sec.key ? 'rgba(234,108,10,0.08)' : 'transparent',
                             }}>
-                            {sec.title}
+                            {t(sec.title)}
                             <svg className={`w-4 h-4 transition-transform duration-200
                                 ${openKey === sec.key ? 'rotate-180' : ''}`}
                                 viewBox="0 0 20 20" fill="none">
@@ -151,7 +150,7 @@ export default function PhoneHeaderModal({ isOpen, onClose }) {
                                     }>
                                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                         style={{ background: ACCENT }}/>
-                                    {link.label}
+                                    {t(link.label)}
                                 </NavLink>
                             ))}
                         </div>
@@ -163,7 +162,7 @@ export default function PhoneHeaderModal({ isOpen, onClose }) {
                     className="flex items-center justify-between px-5 py-3.5 text-sm font-semibold
                         text-slate-100 hover:text-white transition-colors"
                     style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    Bog&apos;lanish
+                    {t('boglanish')}
                     <svg width="14" height="14" viewBox="0 0 14 15" fill="none">
                         <path d="M1.16666 7.50002H12.8333M12.8333 7.50002L6.99999 1.66669M12.8333 7.50002L6.99999 13.3334"
                             stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>

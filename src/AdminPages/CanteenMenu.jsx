@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
 import {
     C, Spin, fmtDate, Lbl, iStyle,
@@ -55,8 +55,8 @@ function CanteenForm({ item, onClose, onSaved }) {
 
     /* focus ref */
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
 
     /* setters */
@@ -314,29 +314,37 @@ export default function CanteenMenu() {
 
     /* date filters */
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const [startDate, setStartDate] = useState('');
     const [endDate,   setEndDate]   = useState('');
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim()) params.search     = search.trim();
-            if (startDate)     params.start_date = startDate;
-            if (endDate)       params.end_date   = endDate;
-            const res = await $api.get('/api/canteen-menu', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); } finally { setLoading(false); }
-    }, [page, search, startDate, endDate]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim()) params.search     = search.trim();
+                if (startDate)     params.start_date = startDate;
+                if (endDate)       params.end_date   = endDate;
+                const res = await $api.get('/api/canteen-menu', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, startDate, endDate, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
+    const handleSearch = v => { setSearch(v); setPage(1); };
 
     const handleToggle = async item => {
         setToggling(p => ({ ...p, [item.id]: true }));
@@ -346,7 +354,7 @@ export default function CanteenMenu() {
         } catch { /**/ } finally { setToggling(p => ({ ...p, [item.id]: false })); }
     };
 
-    const refresh = () => { setModal(null); fetchData(); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     return (
         <div style={{ minHeight: '100%' }}>

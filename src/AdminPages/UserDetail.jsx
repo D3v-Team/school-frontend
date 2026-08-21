@@ -11,7 +11,7 @@ const ROLE_CFG = {
     ADMIN:       { label: 'Admin',       color: C.green,  bg: C.gBg,     border: C.gBdr   },
     EDITOR:      { label: 'Editor',      color: C.blue,   bg: C.blueBg,  border: C.blueBdr },
 };
-const ROLES = ['EDITOR', 'ADMIN', 'SUPER_ADMIN'];
+const ROLES = ['ADMIN', 'SUPER_ADMIN'];
 
 const Card = ({ children, style = {} }) => (
     <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', ...style }}>
@@ -40,8 +40,8 @@ export default function UserDetail() {
     const [deleting, setDeleting] = useState(false);
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
 
     useEffect(() => {
@@ -55,7 +55,7 @@ export default function UserDetail() {
                     email:        d.email        || '',
                     full_name:    d.full_name    || '',
                     password:     '',
-                    role:         d.role         || 'EDITOR',
+                    role:         d.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN',
                     is_login:     d.is_login     ?? true,
                 });
             } catch { setUser(null); }
@@ -137,7 +137,6 @@ export default function UserDetail() {
                                 {role.label}
                             </span>
                         </div>
-                        <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0' }}>ID: {user.id} · Qo'shilgan: {fmtDate(user.created_at)}</p>
                     </div>
                 </div>
 
@@ -229,23 +228,46 @@ export default function UserDetail() {
                     <Card style={{ borderTop: `3px solid ${role.color}` }}>
                         <h3 style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.07em', margin: '0 0 12px' }}>Rol</h3>
                         {editMode ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 {ROLES.map(r => {
-                                    const cfg = ROLE_CFG[r];
+                                    const cfg    = ROLE_CFG[r];
                                     const active = form.role === r;
                                     return (
-                                        <label key={r} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9, cursor: 'pointer', border: `1.5px solid ${active ? cfg.color : C.border}`, background: active ? cfg.bg : C.bg, transition: 'all .15s' }}>
-                                            <input type="radio" name="role" value={r} checked={active} onChange={() => set('role', r)} style={{ accentColor: cfg.color }} />
-                                            <span style={{ fontSize: 13, fontWeight: active ? 700 : 400, color: active ? cfg.color : C.sub }}>{cfg.label}</span>
-                                        </label>
+                                        <button key={r} type="button" onClick={() => set('role', r)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 10,
+                                                padding: '9px 12px', borderRadius: 9, cursor: 'pointer',
+                                                border: `1.5px solid ${active ? cfg.color : C.border}`,
+                                                background: active ? cfg.bg : C.bg,
+                                                transition: 'all .15s', textAlign: 'left',
+                                            }}>
+                                            <div style={{
+                                                width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                                                background: active ? cfg.color : C.border,
+                                            }} />
+                                            <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? cfg.color : C.sub, flex: 1 }}>
+                                                {cfg.label}
+                                            </span>
+                                            {active && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke={cfg.color} strokeWidth="2.5">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                            )}
+                                        </button>
                                     );
                                 })}
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                <span style={{ fontSize: 14, fontWeight: 700, padding: '6px 14px', borderRadius: 20, background: role.bg, color: role.color, border: `1px solid ${role.border}`, display: 'inline-block', textAlign: 'center' }}>
-                                    {role.label}
-                                </span>
+                            <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 8,
+                                padding: '8px 16px', borderRadius: 20,
+                                background: role.bg, color: role.color,
+                                border: `1px solid ${role.border}`,
+                                fontSize: 14, fontWeight: 700,
+                            }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: role.color }} />
+                                {role.label}
                             </div>
                         )}
                     </Card>
@@ -254,17 +276,46 @@ export default function UserDetail() {
                     <Card>
                         <h3 style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.07em', margin: '0 0 12px' }}>Kirish holati</h3>
                         {editMode ? (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: form.is_login ? C.green : C.red }}>
-                                    {form.is_login ? '✓ Ruxsat bor' : '✗ Bloklangan'}
-                                </span>
-                                <div onClick={() => set('is_login', !form.is_login)} style={{ width: 44, height: 24, borderRadius: 12, cursor: 'pointer', background: form.is_login ? C.brand : '#cbd5e1', position: 'relative', transition: 'background .2s' }}>
-                                    <div style={{ position: 'absolute', top: 3, left: form.is_login ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.18)', transition: 'left .2s' }} />
+                            <div
+                                onClick={() => set('is_login', !form.is_login)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+                                    border: `1.5px solid ${form.is_login ? C.gBdr : C.rBdr}`,
+                                    background: form.is_login ? C.gBg : C.rBg,
+                                    transition: 'all .2s',
+                                }}>
+                                <div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: form.is_login ? C.green : C.red }}>
+                                        {form.is_login ? 'Kirish ruxsati bor' : 'Kirish bloklangan'}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: form.is_login ? C.green : C.red, opacity: 0.75, marginTop: 2 }}>
+                                        {form.is_login ? 'Foydalanuvchi tizimga kira oladi' : 'Login bloklangan'}
+                                    </div>
+                                </div>
+                                <div style={{
+                                    width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+                                    background: form.is_login ? C.green : '#cbd5e1',
+                                    position: 'relative', transition: 'background .2s',
+                                }}>
+                                    <div style={{
+                                        position: 'absolute', top: 3,
+                                        left: form.is_login ? 23 : 3,
+                                        width: 18, height: 18, borderRadius: '50%',
+                                        background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        transition: 'left .2s',
+                                    }} />
                                 </div>
                             </div>
                         ) : (
-                            <div style={{ padding: '8px 12px', borderRadius: 8, textAlign: 'center', background: user.is_login ? C.gBg : C.rBg, border: `1px solid ${user.is_login ? C.gBdr : C.rBdr}`, color: user.is_login ? C.green : C.red, fontSize: 13, fontWeight: 700 }}>
-                                {user.is_login ? '✓ Tizimga kira oladi' : '✗ Kirish bloklangan'}
+                            <div style={{
+                                padding: '12px 14px', borderRadius: 10, textAlign: 'center',
+                                background: user.is_login ? C.gBg : C.rBg,
+                                border: `1px solid ${user.is_login ? C.gBdr : C.rBdr}`,
+                                color: user.is_login ? C.green : C.red,
+                                fontSize: 13, fontWeight: 700,
+                            }}>
+                                {user.is_login ? 'Tizimga kira oladi' : 'Kirish bloklangan'}
                             </div>
                         )}
                     </Card>

@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import ReactLoading from "react-loading";
 import fr4 from "../../img/Group 55.png";
-import DefaultFoto from '../../img/person.jpg'
+import DefaultFoto from '../../img/person.jpg';
+import { mediaUrl } from '../../utils/api';
 
 export default function StaffCards() {
   const { t, i18n } = useTranslation();
@@ -38,7 +39,7 @@ export default function StaffCards() {
             className="staff_wr flex items-center bg-white shadow-md rounded-xl p-6 space-x-6 border border-gray-200 mb-[20px]"
           >
             <img
-              src={person?.image?.length > 0 && person.image[0].url ? person.image[0].url : DefaultFoto}
+              src={person?.image?.length > 0 && person.image[0].url ? mediaUrl(person.image[0].url) : DefaultFoto}
               alt={person?.name || "Default Image"}
               className="w-[176px] h-[214px] object-cover"
             />

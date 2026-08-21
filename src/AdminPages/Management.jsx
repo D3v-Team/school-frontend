@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CustomDataTable from "../lib/custom-data-table";
 import Loader from "../lib/loader";
 import { $api } from "../utils";
+import { mediaUrl } from "../utils/api";
 import { Tooltip, Avatar } from "@material-tailwind/react";
 import { AddManagement } from "../AdminComponents/management/add-menegment";
 import { UpdateManagement } from "../AdminComponents/management/update-management";
@@ -12,7 +13,7 @@ export default function Management() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("uz");
+  const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
 
   const fetchData = async () => {
     try {
@@ -44,7 +45,7 @@ export default function Management() {
       selector: (row) => (
         <div className="my-2">
           <Avatar size="lg"
-            src={row.image[0]?.url || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'}
+            src={mediaUrl(row.image[0]?.url) || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'}
             className=" object-cover"
           />
         </div>

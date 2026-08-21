@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { mediaUrl } from "../utils/api";
 import {
     C, Spin, Lbl, iStyle,
     PBtn, GBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -15,13 +16,13 @@ function SocialForm({ item, onClose, onSaved }) {
         url:      item?.url      || '',
     });
     const [iconFile, setIconFile] = useState(null);
-    const [preview,  setPreview]  = useState(item?.icon_url || null);
+    const [preview,  setPreview]  = useState(item?.icon_url ? mediaUrl(item.icon_url) : null);
     const [saving,   setSaving]   = useState(false);
     const [error,    setError]    = useState('');
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -161,8 +162,8 @@ export default function ContactInfo() {
 
     /* focus tracking */
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
 
     /* contact form */
@@ -218,11 +219,11 @@ export default function ContactInfo() {
                 address_ru:    form.address_ru.trim(),
                 phone:         form.phone.trim(),
                 email:         form.email.trim(),
-                latitude:      form.latitude ? Number(form.latitude) : undefined,
-                longitude:     form.longitude ? Number(form.longitude) : undefined,
             };
-            // Remove undefined
-            Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+            const lat = Number(String(form.latitude).replace(',', '.').trim());
+            const lng = Number(String(form.longitude).replace(',', '.').trim());
+            if (Number.isFinite(lat) && lat >= -90 && lat <= 90) payload.latitude = lat;
+            if (Number.isFinite(lng) && lng >= -180 && lng <= 180) payload.longitude = lng;
             await $api.patch('/api/contact/info', payload);
             setInfoMsg('ok');
             setTimeout(() => setInfoMsg(''), 3000);
@@ -424,7 +425,7 @@ export default function ContactInfo() {
                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                         {/* icon */}
                                         {link.icon_url ? (
-                                            <img src={link.icon_url} alt={link.platform}
+                                            <img src={mediaUrl(link.icon_url)} alt={link.platform}
                                                 style={{ width: 32, height: 32, objectFit: 'contain',
                                                     borderRadius: 8, border: `1px solid ${C.border}`,
                                                     background: C.bg, padding: 4, flexShrink: 0 }} />

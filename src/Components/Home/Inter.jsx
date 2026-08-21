@@ -8,32 +8,32 @@ gsap.registerPlugin(ScrollTrigger);
 
 const SERVICES = [
     {
-        id: 1, category: "Ota-onalar uchun", title: "Ota-onalar kabineti",
-        items: ["Qabul talablari va ro'yxatdan o'tish", "Hujjatlar ro'yxati va yuklab olish", "Ma'muriyat bilan bog'lanish", "Ota-onalar va o'qituvchilar uchrashuvlari jadvali"],
+        id: 1, category: "service_parents_category", title: "service_parents_title",
+        items: ["service_parents_item1", "service_parents_item2", "service_parents_item3", "service_parents_item4"],
         to: "/virtual-kabinet", accent: "#ea6c0a", bg: "#130e05",
         icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
     },
     {
-        id: 2, category: "O'quvchilar uchun", title: "O'quvchilar kabineti",
-        items: ["Joriy darslar va qo'ng'iroq jadvallari", "Bayram va tadbirlar jadvali", "To'garaklar va seksiyalar", "Maktab tadbirlari haqida e'lonlar"],
+        id: 2, category: "service_students_category", title: "service_students_title",
+        items: ["service_students_item1", "service_students_item2", "service_students_item3", "service_students_item4"],
         to: "/", accent: "#3b82f6", bg: "#05080f",
         icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
     },
     {
-        id: 3, category: "Maktab haqida", title: "Maktab tashrif qog'ozi",
-        items: ["Muassasa tarixi va yutuqlari", "Professor-o'qituvchilar tarkibi", "Rahbariyat haqida ma'lumot", "Maktabning rekvizitlari"],
+        id: 3, category: "service_school_category", title: "service_school_title",
+        items: ["service_school_item1", "service_school_item2", "service_school_item3", "service_school_item4"],
         to: "/biz-haqimizda", accent: "#8b5cf6", bg: "#0a0510",
         icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
     },
     {
-        id: 4, category: "Hujjatlar", title: "Rasmiy hujjatlar bo'limi",
-        items: ["Nizom va litsenziyalar", "O'zini o'zi baholash hisobotlari", "Davlat idoralari uchun hujjatlar", "Buyruqlar va farmoyishlar"],
+        id: 4, category: "service_docs_category", title: "service_docs_title",
+        items: ["service_docs_item1", "service_docs_item2", "service_docs_item3", "service_docs_item4"],
         to: "/hujjatlar", accent: "#10b981", bg: "#031008",
         icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
     },
     {
-        id: 5, category: "Media zona", title: "Axborot xizmati",
-        items: ["Yangiliklar bo'limi", "Sinf hayotidan foto galereyalar", "Video galereyalar va reportajlar", "Maktab gazetasi va e'lonlar"],
+        id: 5, category: "service_media_category", title: "service_media_title",
+        items: ["service_media_item1", "service_media_item2", "service_media_item3", "service_media_item4"],
         to: "/barcha-yangiliklar", accent: "#ec4899", bg: "#0f0408",
         icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
     },
@@ -71,7 +71,7 @@ export default function Inter() {
                 {/* Header — part of normal document flow, never sticky */}
                 <div className="mb-10">
                     <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2"
-                        style={{ color: '#ea6c0a' }}>Online xizmatlar</p>
+                        style={{ color: '#ea6c0a' }}>{t('Onlinexizmatlar')}</p>
                     <h2 className="text-3xl font-bold text-slate-100">{t('Interaktivxizmatlar')}</h2>
                 </div>
 
@@ -107,12 +107,12 @@ export default function Inter() {
                                                     </span>
                                                 </div>
                                                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1"
-                                                    style={{ color: s.accent }}>{s.category}</p>
-                                                <h3 className="text-base font-bold text-slate-100 leading-snug">{s.title}</h3>
+                                                    style={{ color: s.accent }}>{t(s.category)}</p>
+                                                <h3 className="text-base font-bold text-slate-100 leading-snug">{t(s.title)}</h3>
                                             </div>
                                             <span className="inline-flex items-center gap-1.5 self-start text-xs font-semibold px-3 py-1.5 rounded-full"
                                                 style={{ background: `${s.accent}15`, color: s.accent, border: `1px solid ${s.accent}30` }}>
-                                                Ko&apos;rish
+                                                {t('Korish')}
                                                 <svg width="10" height="10" viewBox="0 0 14 15" fill="none">
                                                     <path d="M1.16666 7.50002H12.8333M12.8333 7.50002L6.99999 1.66669M12.8333 7.50002L6.99999 13.3334" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                                                 </svg>
@@ -120,7 +120,7 @@ export default function Inter() {
                                         </div>
                                         {/* Right */}
                                         <div className="flex-1 p-6 md:p-8">
-                                            <p className="text-[10px] text-slate-600 uppercase tracking-[0.14em] font-semibold mb-4">Nima topasiz</p>
+                                            <p className="text-[10px] text-slate-600 uppercase tracking-[0.14em] font-semibold mb-4">{t('Nimatopasiz')}</p>
                                             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                                 {s.items.map((item, i) => (
                                                     <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
@@ -128,7 +128,7 @@ export default function Inter() {
                                                             style={{ background: `${s.accent}15`, border: `1px solid ${s.accent}35` }}>
                                                             <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.accent }} />
                                                         </span>
-                                                        {item}
+                                                        {t(item)}
                                                     </li>
                                                 ))}
                                             </ul>

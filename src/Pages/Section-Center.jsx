@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom"
 import ReactLoading from 'react-loading';
 import { useTranslation } from "react-i18next";
 import DefaultFoto from '../img/person.jpg'
+import { mediaUrl } from '../utils/api'
 
 
 export default function SectionCenter() {
@@ -49,7 +50,7 @@ export default function SectionCenter() {
                     className="staff_wr flex items-center bg-white  space-x-6 mb-[20px]"
                 >
                     <img
-                        src={data?.image?.length > 0 && data.image[0].url ? data.image[0].url : DefaultFoto}
+                        src={data?.image?.length > 0 && data.image[0].url ? mediaUrl(data.image[0].url) : DefaultFoto}
                         alt={data?.name || "Default Image"}
                         className="w-[176px] h-[214px] object-cover"
                     />

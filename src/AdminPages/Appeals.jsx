@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
 import {
     C, Spin, fmtDate, Lbl, iStyle, taStyle,
@@ -190,24 +190,31 @@ export default function Appeals() {
     const [loading, setLoading] = useState(true);
     const [modal,   setModal]   = useState(null);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim()) params.search = search.trim();
-            if (status)        params.status = status;
-            const res = await $api.get('/api/appeals', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search, status]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim()) params.search = search.trim();
+                if (status)        params.status = status;
+                const res = await $api.get('/api/appeals', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, status, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
-    const refresh = () => { setModal(null); fetchData(); };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     return (
         <div style={{ minHeight: '100%' }}>

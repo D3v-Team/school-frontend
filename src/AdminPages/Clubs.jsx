@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, mediaUrl, useLang } from "../utils/api";
+import { BookOpen, Code2, Dumbbell, Globe2, Music2, Palette } from "lucide-react";
 import {
     C, Spin, fmtDate, Lbl, iStyle, taStyle,
     PBtn, GBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -36,14 +38,14 @@ function ClubForm({ item, onClose, onSaved }) {
     const [form,       setForm]       = useState(isEdit ? { ...EMPTY, ...item } : EMPTY);
     const [activeLang, setActiveLang] = useState('latin');
     const [coverFile,  setCoverFile]  = useState(null);
-    const [preview,    setPreview]    = useState(isEdit ? item.cover_image || null : null);
+    const [preview,    setPreview]    = useState(isEdit ? (item.cover_image ? mediaUrl(item.cover_image) : null) : null);
     const [saving,     setSaving]     = useState(false);
     const [error,      setError]      = useState('');
     const [errors,     setErrors]     = useState({});
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -297,6 +299,7 @@ function ClubForm({ item, onClose, onSaved }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function Clubs() {
+    const lang = useLang();
     const [items,   setItems]   = useState([]);
     const [total,   setTotal]   = useState(0);
     const [page,    setPage]    = useState(1);
@@ -306,24 +309,32 @@ export default function Clubs() {
     const [loading, setLoading] = useState(true);
     const [modal,   setModal]   = useState(null);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim()) params.search    = search.trim();
-            if (catFilt)       params.category  = catFilt;
-            if (actFilt !== '') params.is_active = actFilt;
-            const res = await $api.get('/api/clubs', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); } finally { setLoading(false); }
-    }, [page, search, catFilt, actFilt]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim()) params.search    = search.trim();
+                if (catFilt)       params.category  = catFilt;
+                if (actFilt !== '') params.is_active = actFilt;
+                const res = await $api.get('/api/clubs', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, catFilt, actFilt, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
-    const refresh = () => { setModal(null); fetchData(); };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     const catOptions = [
         { val: '', label: 'Barchasi' },
@@ -332,8 +343,8 @@ export default function Clubs() {
 
     const actOptions = [
         { val: '',      label: 'Barchasi' },
-        { val: 'true',  label: '✓ Aktiv',   color: C.green, bg: C.gBg, border: C.gBdr },
-        { val: 'false', label: '○ Nofaol',  color: C.muted, bg: C.bg,  border: C.border },
+        { val: 'true',  label: 'Aktiv',   color: C.green, bg: C.gBg, border: C.gBdr },
+        { val: 'false', label: 'Nofaol',  color: C.muted, bg: C.bg,  border: C.border },
     ];
 
     return (
@@ -366,8 +377,8 @@ export default function Clubs() {
                 <div style={{ display: 'flex', gap: 5 }}>
                     {[
                         { val: '',      label: 'Barchasi' },
-                        { val: 'true',  label: '✓ Aktiv',   color: C.green, bg: C.gBg, border: C.gBdr },
-                        { val: 'false', label: '○ Nofaol',  color: C.muted, bg: C.bg,  border: C.border },
+                        { val: 'true',  label: 'Aktiv',   color: C.green, bg: C.gBg, border: C.gBdr },
+                        { val: 'false', label: 'Nofaol',  color: C.muted, bg: C.bg,  border: C.border },
                     ].map(opt => {
                         const active = actFilt === opt.val;
                         return (
@@ -401,16 +412,17 @@ export default function Clubs() {
                                 {/* image */}
                                 <div style={{ height: 140, position: 'relative' }}>
                                     {item.cover_image ? (
-                                        <img src={item.cover_image} alt=""
+                                        <img src={mediaUrl(item.cover_image)} alt=""
                                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                     ) : (
                                         <div style={{ height: '100%', background: cat.bg,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <span style={{ fontSize: 36 }}>
-                                                {item.category === 'SPORT' ? '⚽' : item.category === 'SCIENCE' ? '🔬' :
-                                                 item.category === 'ART' ? '🎨' : item.category === 'LANGUAGE' ? '🌍' :
-                                                 item.category === 'TECHNOLOGY' ? '💻' : item.category === 'MUSIC' ? '🎵' : '📚'}
-                                            </span>
+                                            {(() => {
+                                                const Icon = item.category === 'SPORT' ? Dumbbell : item.category === 'SCIENCE' ? BookOpen :
+                                                    item.category === 'ART' ? Palette : item.category === 'LANGUAGE' ? Globe2 :
+                                                    item.category === 'TECHNOLOGY' ? Code2 : item.category === 'MUSIC' ? Music2 : BookOpen;
+                                                return <Icon size={44} strokeWidth={1.5} color={cat.color} aria-hidden="true" />;
+                                            })()}
                                         </div>
                                     )}
                                     <div style={{ position: 'absolute', top: 8, left: 8 }}>
@@ -429,7 +441,7 @@ export default function Clubs() {
                                 <div style={{ padding: '12px 14px' }}>
                                     <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 4px',
                                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {item.name_latin || item.name_cyril || '—'}
+                                        {getLang(item, 'name', lang) || '—'}
                                     </p>
                                     {item.supervisor_name && (
                                         <p style={{ fontSize: 12, color: C.sub, margin: '0 0 2px' }}>

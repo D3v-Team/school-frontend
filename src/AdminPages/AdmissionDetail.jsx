@@ -183,7 +183,7 @@ export default function AdmissionDetail() {
                 const res = await $api.get(`/api/admission/${id}`);
                 const d = res.data?.data || res.data;
                 setData(d);
-                setForm(d);
+                setForm({ ...d, birth_date: d.birth_date ? String(d.birth_date).slice(0, 10) : '' });
             } catch {
                 setData(null);
             } finally {
@@ -199,7 +199,7 @@ export default function AdmissionDetail() {
         try {
             const payload = {
                 student_full_name: form.student_full_name,
-                birth_date:        form.birth_date,
+                birth_date:        form.birth_date ? `${form.birth_date.slice(0, 10)}T00:00:00.000Z` : undefined,
                 grade_applying:    form.grade_applying,
                 parent_full_name:  form.parent_full_name,
                 parent_phone:      form.parent_phone,

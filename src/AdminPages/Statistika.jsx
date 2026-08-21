@@ -7,7 +7,7 @@ import { UpdateStatistic } from "../AdminComponents/statistika/update-statistics
 export default function Statistika() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null); // Statistik ma'lumotni saqlash
-  const [activeTab, setActiveTab] = useState("uz");
+  const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
 

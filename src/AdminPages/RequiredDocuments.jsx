@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, useLang } from "../utils/api";
 import {
     C, Lbl, iStyle, taStyle, LANGS,
     PBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -29,8 +30,8 @@ function ReqDocForm({ item, onClose, onSaved }) {
     const [errors,     setErrors]     = useState({});
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -164,6 +165,7 @@ function ReqDocForm({ item, onClose, onSaved }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function RequiredDocuments() {
+    const lang = useLang();
     const [items,   setItems]   = useState([]);
     const [total,   setTotal]   = useState(0);
     const [page,    setPage]    = useState(1);
@@ -171,23 +173,30 @@ export default function RequiredDocuments() {
     const [loading, setLoading] = useState(true);
     const [modal,   setModal]   = useState(null);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'order', sortOrder: 'asc' };
-            if (search.trim()) params.search = search.trim();
-            const res = await $api.get('/api/required-documents/admin', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'order', sortOrder: 'asc' };
+                if (search.trim()) params.search = search.trim();
+                const res = await $api.get('/api/required-documents/admin', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
-    const refresh = () => { setModal(null); fetchData(); };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     return (
         <div style={{ minHeight: '100%' }}>
@@ -217,11 +226,11 @@ export default function RequiredDocuments() {
                             {/* latin title */}
                             <div style={{ minWidth: 0 }}>
                                 <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {item.title_latin || '—'}
+                                    {getLang(item, 'title', lang) || '—'}
                                 </p>
-                                {item.description_latin && (
+                                {getLang(item, 'description', lang) && (
                                     <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {item.description_latin}
+                                        {getLang(item, 'description', lang)}
                                     </p>
                                 )}
                             </div>

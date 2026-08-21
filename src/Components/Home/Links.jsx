@@ -1,33 +1,70 @@
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import DriftWall from "../DriftWall";
+import { useEffect, useState } from "react";
+import { Images } from "lucide-react";
+import pub, { getLang, mediaUrl } from "../../utils/api";
 
-/* Static gallery images — backend will be connected later */
-const galleryItems = [
-    { image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80', title: "Maktab binosi" },
-    { image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80', title: "Ta'lim jarayoni" },
-    { image: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&q=80', title: "Darslar" },
-    { image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80', title: "Sport" },
-    { image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&q=80', title: "Olimpiada" },
-    { image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80', title: "Texnologiya" },
-    { image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&q=80', title: "Kutubxona" },
-    { image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80', title: "Tadbirlar" },
-    { image: 'https://images.unsplash.com/photo-1588072432836-e10032774350?w=600&q=80', title: "Sinf xonasi" },
-    { image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80', title: "Guruhli ishlar" },
-    { image: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=600&q=80', title: "Tabiat" },
-    { image: 'https://images.unsplash.com/photo-1551958219-acbc595f14e2?w=600&q=80', title: "Robototexnika" },
-    { image: 'https://images.unsplash.com/photo-1535982330050-f1c2fb79ff78?w=600&q=80', title: "Musiqa" },
-    { image: 'https://images.unsplash.com/photo-1545987796-200677ee1011?w=600&q=80', title: "Laboratoriya" },
-    { image: 'https://images.unsplash.com/photo-1564981797816-1043664bf78d?w=600&q=80', title: "San'at" },
-];
+function isPhotoAlbum(a) {
+    const t = (a.type || '').toUpperCase();
+    return !t || t === 'PHOTO' || t === 'IMAGE';
+}
+
+function isVideoAlbum(a) {
+    return (a.type || '').toUpperCase() === 'VIDEO';
+}
 
 export default function GallerySection() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const [albums, setAlbums] = useState([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            try {
+                const res = await pub.get('/api/media-albums', {
+                    params: { limit: 30, is_public: true, sortBy: 'created_at', sortOrder: 'desc' },
+                });
+                const all = res.data?.data || res.data?.items || [];
+                const media = all.filter(a => isPhotoAlbum(a) || isVideoAlbum(a));
+
+                const detailed = await Promise.all(media.slice(0, 12).map(async album => {
+                    if ((album.items || []).length) return album;
+                    try {
+                        const r = await pub.get(`/api/media-albums/${album.id}`);
+                        return r.data?.data || r.data || album;
+                    } catch {
+                        return album;
+                    }
+                }));
+
+                if (!cancelled) setAlbums(detailed);
+            } catch {
+                if (!cancelled) setAlbums([]);
+            }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, []);
+
+    const galleryItems = [];
+    albums.forEach(album => {
+        const title = getLang(album, 'title', i18n.language);
+        if (album.cover_image) {
+            galleryItems.push({ image: mediaUrl(album.cover_image), title });
+        }
+        (album.items || []).forEach(it => {
+            const url = it.url || it.image_url || it.cover_image;
+            if (!url) return;
+            if (url.match(/\.(mp4|webm|mov)$/i)) return;
+            galleryItems.push({ image: mediaUrl(url), title });
+        });
+    });
+    const wallItems = galleryItems.slice(0, 24);
 
     return (
         <section style={{ background: '#0a0f1c' }} className="py-16">
             <div className="Container">
-                {/* Header */}
                 <div className="flex items-end justify-between mb-8">
                     <div>
                         <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2"
@@ -55,29 +92,35 @@ export default function GallerySection() {
                     </NavLink>
                 </div>
 
-                {/* DriftWall — full width, Container dan tashqarida */}
                 <div style={{ height: 560, borderRadius: 0, overflow: 'hidden', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
-                    <DriftWall
-                        items={galleryItems}
-                        columns={6}
-                        tileWidth={220}
-                        tileHeight={145}
-                        gap={12}
-                        radius={10}
-                        tilt={14}
-                        turn={-12}
-                        perspective={1200}
-                        depth={100}
-                        speed={38}
-                        direction="up"
-                        variance={0.4}
-                        parallax={0.55}
-                        lift={60}
-                        fade={0.5}
-                        dim={0.6}
-                        grayscale={true}
-                        overlayColor="#0a0f1c"
-                    />
+                    {wallItems.length > 0 ? (
+                        <DriftWall
+                            items={wallItems}
+                            columns={6}
+                            tileWidth={220}
+                            tileHeight={145}
+                            gap={12}
+                            radius={10}
+                            tilt={14}
+                            turn={-12}
+                            perspective={1200}
+                            depth={100}
+                            speed={38}
+                            direction="up"
+                            variance={0.4}
+                            parallax={0.55}
+                            lift={60}
+                            fade={0.5}
+                            dim={0.6}
+                            grayscale={true}
+                            overlayColor="#0a0f1c"
+                        />
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-600">
+                            <Images size={42} strokeWidth={1.4} aria-hidden="true" />
+                            <span className="text-sm">{t('MediaTopilmadi')}</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

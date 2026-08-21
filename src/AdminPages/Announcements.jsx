@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, mediaUrl, useLang } from "../utils/api";
 import {
     C, Spin, fmtDate, Lbl, iStyle, taStyle,
     PBtn, GBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -22,15 +23,15 @@ function AnnouncementForm({ item, onClose, onSaved }) {
     const [form,       setForm]       = useState(isEdit ? { ...EMPTY, ...item } : EMPTY);
     const [activeLang, setActiveLang] = useState('latin');
     const [coverFile,  setCoverFile]  = useState(null);
-    const [preview,    setPreview]    = useState(isEdit ? item.cover_image || null : null);
+    const [preview,    setPreview]    = useState(isEdit ? (item.cover_image ? mediaUrl(item.cover_image) : null) : null);
     const [saving,     setSaving]     = useState(false);
     const [error,      setError]      = useState('');
     const [errors,     setErrors]     = useState({});
 
     /* focus tracking via ref — prevents remount */
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
 
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
@@ -251,6 +252,7 @@ function AnnouncementForm({ item, onClose, onSaved }) {
    MAIN PAGE
 ═══════════════════════════════════════════════════════════════ */
 export default function Announcements() {
+    const lang = useLang();
     const [items,    setItems]    = useState([]);
     const [total,    setTotal]    = useState(0);
     const [page,     setPage]     = useState(1);
@@ -260,23 +262,30 @@ export default function Announcements() {
     const [modal,    setModal]    = useState(null);
     const [toggling, setToggling] = useState({});
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim())  params.search    = search.trim();
-            if (pubFilt !== '') params.is_public = pubFilt;
-            const res = await $api.get('/api/announcements/admin', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search, pubFilt]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim())  params.search    = search.trim();
+                if (pubFilt !== '') params.is_public = pubFilt;
+                const res = await $api.get('/api/announcements/admin', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, pubFilt, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
+    const handleSearch = v => { setSearch(v); setPage(1); };
 
     const handleToggle = async item => {
         setToggling(p => ({ ...p, [item.id]: true }));
@@ -287,12 +296,12 @@ export default function Announcements() {
         finally { setToggling(p => ({ ...p, [item.id]: false })); }
     };
 
-    const refresh = () => { setModal(null); fetchData(); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     const pubOptions = [
         { val: '',      label: 'Barchasi' },
-        { val: 'true',  label: '✓ Aktiv',   color: C.green,  bg: C.gBg,  border: C.gBdr },
-        { val: 'false', label: '○ Yashirin', color: C.muted,  bg: C.bg,   border: C.border },
+        { val: 'true',  label: 'Aktiv',    color: C.green,  bg: C.gBg,  border: C.gBdr },
+        { val: 'false', label: 'Yashirin', color: C.muted,  bg: C.bg,   border: C.border },
     ];
 
     return (
@@ -328,7 +337,7 @@ export default function Announcements() {
                             {/* thumb + title */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                                 {item.cover_image ? (
-                                    <img src={item.cover_image} alt="" style={{ width: 38, height: 26,
+                                    <img src={mediaUrl(item.cover_image)} alt="" style={{ width: 38, height: 26,
                                         objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.border}`, flexShrink: 0 }} />
                                 ) : (
                                     <div style={{ width: 38, height: 26, borderRadius: 6, flexShrink: 0,
@@ -342,14 +351,14 @@ export default function Announcements() {
                                 )}
                                 <span style={{ fontSize: 13, fontWeight: 600, color: C.text,
                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {item.title_latin || item.title_cyril || '—'}
+                                    {getLang(item, 'title', lang) || '—'}
                                 </span>
                             </div>
 
                             {/* content preview */}
                             <span style={{ fontSize: 12, color: C.muted,
                                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 10 }}>
-                                {item.content_latin?.replace(/<[^>]+>/g, '').slice(0, 60) || '—'}
+                                {getLang(item, 'content', lang)?.replace(/<[^>]+>/g, '').slice(0, 60) || '—'}
                             </span>
 
                             {/* status badge */}

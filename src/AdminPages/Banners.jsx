@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, mediaUrl, useLang } from "../utils/api";
 import {
     C, Spin, fmtDate, Lbl, iStyle, taStyle,
     PBtn, GBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -20,15 +21,15 @@ function BannerForm({ item, onClose, onSaved }) {
     const [form,       setForm]       = useState(isEdit ? { ...EMPTY, ...item } : EMPTY);
     const [activeLang, setActiveLang] = useState('latin');
     const [imageFile,  setImageFile]  = useState(null);
-    const [preview,    setPreview]    = useState(isEdit ? item.image_url || item.image || null : null);
+    const [preview,    setPreview]    = useState(isEdit ? mediaUrl(item.image_url || item.image || null) : null);
     const [saving,     setSaving]     = useState(false);
     const [error,      setError]      = useState('');
     const [errors,     setErrors]     = useState({});
 
     /* focus via ref — no remount */
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -238,6 +239,7 @@ function BannerForm({ item, onClose, onSaved }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function Banners() {
+    const lang = useLang();
     const [items,    setItems]    = useState([]);
     const [total,    setTotal]    = useState(0);
     const [page,     setPage]     = useState(1);
@@ -247,22 +249,30 @@ export default function Banners() {
     const [modal,    setModal]    = useState(null);
     const [toggling, setToggling] = useState({});
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim())  params.search    = search.trim();
-            if (actFilt !== '') params.is_active = actFilt;
-            const res = await $api.get('/api/banners', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); } finally { setLoading(false); }
-    }, [page, search, actFilt]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim())  params.search    = search.trim();
+                if (actFilt !== '') params.is_active = actFilt;
+                const res = await $api.get('/api/banners', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, actFilt, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
+    const handleSearch = v => { setSearch(v); setPage(1); };
 
     const handleToggle = async item => {
         setToggling(p => ({ ...p, [item.id]: true }));
@@ -272,12 +282,12 @@ export default function Banners() {
         } catch { /**/ } finally { setToggling(p => ({ ...p, [item.id]: false })); }
     };
 
-    const refresh = () => { setModal(null); fetchData(); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     const activeOpts = [
         { val: '',      label: 'Barchasi' },
-        { val: 'true',  label: '✓ Faol',   color: C.green, bg: C.gBg, border: C.gBdr },
-        { val: 'false', label: '○ Nofaol', color: C.muted, bg: C.bg,  border: C.border },
+        { val: 'true',  label: 'Faol',    color: C.green, bg: C.gBg, border: C.gBdr },
+        { val: 'false', label: 'Nofaol',  color: C.muted, bg: C.bg,  border: C.border },
     ];
 
     return (
@@ -301,7 +311,7 @@ export default function Banners() {
                         onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
                             <div style={{ position: 'relative', height: 160 }}>
                                 {item.image_url || item.image ? (
-                                    <img src={item.image_url || item.image} alt=""
+                                    <img src={mediaUrl(item.image_url || item.image)} alt=""
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 ) : (
                                     <div style={{ height: '100%', background: '#f1f5f9',
@@ -329,7 +339,7 @@ export default function Banners() {
                             <div style={{ padding: '12px 14px' }}>
                                 <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 4px',
                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {item.title_latin || item.title_cyril || 'Sarlavsiz'}
+                                    {getLang(item, 'title', lang) || 'Sarlavsiz'}
                                 </p>
                                 {item.link_url && (
                                     <p style={{ fontSize: 11, color: C.blue, margin: '0 0 6px',

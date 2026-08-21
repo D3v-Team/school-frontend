@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, mediaUrl, useLang } from "../utils/api";
 import {
     C, Spin, fmtDate, Lbl, iStyle, LANGS,
     PBtn, GBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -23,14 +24,14 @@ function AlbumForm({ item, onClose, onSaved }) {
     });
     const [activeLang, setActiveLang] = useState('latin');
     const [coverFile,  setCoverFile]  = useState(null);
-    const [preview,    setPreview]    = useState(item?.cover_image || null);
+    const [preview,    setPreview]    = useState(item?.cover_image ? mediaUrl(item.cover_image) : null);
     const [saving,     setSaving]     = useState(false);
     const [error,      setError]      = useState('');
     const [errors,     setErrors]     = useState({});
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -64,8 +65,8 @@ function AlbumForm({ item, onClose, onSaved }) {
             fd.append('is_public', String(form.is_public));
             if (coverFile) fd.append('cover_image', coverFile);
 
-            if (isEdit) await $api.patch(`/api/media/albums/${item.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-            else        await $api.post('/api/media/albums', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            if (isEdit) await $api.patch(`/api/media-albums/${item.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            else        await $api.post('/api/media-albums', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             onSaved();
         } catch (err) {
             const msg = err.response?.data?.message;
@@ -189,7 +190,7 @@ function AlbumItemsModal({ album, onClose }) {
     const fetchItems = async () => {
         setLoading(true);
         try {
-            const res = await $api.get(`/api/media/albums/${album.id}`);
+            const res = await $api.get(`/api/media-albums/${album.id}`);
             const d = res.data?.data || res.data;
             setItems(d?.items || d?.media || []);
         } catch { setItems([]); }
@@ -206,7 +207,7 @@ function AlbumItemsModal({ album, onClose }) {
             for (const file of files) {
                 const fd = new FormData();
                 fd.append('file', file);
-                await $api.post(`/api/media/albums/${album.id}/items`, fd, {
+                await $api.post(`/api/media-albums/${album.id}/items`, fd, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             }
@@ -218,7 +219,7 @@ function AlbumItemsModal({ album, onClose }) {
     const handleDelete = async (itemId) => {
         setDeleting(p => ({ ...p, [itemId]: true }));
         try {
-            await $api.delete(`/api/media/albums/${album.id}/items`, { data: { itemId } });
+            await $api.delete(`/api/media-albums/${album.id}/items`, { data: { itemId } });
             setItems(prev => prev.filter(i => i.id !== itemId));
         } catch { /**/ }
         finally { setDeleting(p => ({ ...p, [itemId]: false })); }
@@ -255,9 +256,9 @@ function AlbumItemsModal({ album, onClose }) {
                         {items.map(it => (
                             <div key={it.id} style={{ position: 'relative', borderRadius: 9, overflow: 'hidden', border: `1px solid ${C.border}`, background: C.bg }}>
                                 {it.url?.match(/\.(mp4|webm|mov)$/i) ? (
-                                    <video src={it.url} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+                                    <video src={mediaUrl(it.url)} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
                                 ) : (
-                                    <img src={it.url || it.image_url} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+                                    <img src={mediaUrl(it.url || it.image_url)} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
                                 )}
                                 <button type="button" onClick={() => handleDelete(it.id)}
                                     disabled={deleting[it.id]}
@@ -279,6 +280,7 @@ function AlbumItemsModal({ album, onClose }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function Media() {
+    const lang = useLang();
     const [items,    setItems]    = useState([]);
     const [total,    setTotal]    = useState(0);
     const [page,     setPage]     = useState(1);
@@ -287,33 +289,40 @@ export default function Media() {
     const [modal,    setModal]    = useState(null);
     const [toggling, setToggling] = useState({});
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim()) params.search = search.trim();
-            const res = await $api.get('/api/media/albums', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim()) params.search = search.trim();
+                const res = await $api.get('/api/media-albums', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
+    const handleSearch = v => { setSearch(v); setPage(1); };
 
     const handleTogglePublic = async item => {
         setToggling(p => ({ ...p, [item.id]: true }));
         try {
-            await $api.patch(`/api/media/albums/${item.id}/public`, { is_public: !item.is_public });
+            await $api.patch(`/api/media-albums/${item.id}/public`, { is_public: !item.is_public });
             setItems(prev => prev.map(it => it.id === item.id ? { ...it, is_public: !it.is_public } : it));
         } catch { /**/ }
         finally { setToggling(p => ({ ...p, [item.id]: false })); }
     };
 
-    const refresh = () => { setModal(null); fetchData(); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     return (
         <div style={{ minHeight: '100%' }}>
@@ -333,7 +342,7 @@ export default function Media() {
                             {/* cover */}
                             <div style={{ height: 150, position: 'relative' }}>
                                 {item.cover_image ? (
-                                    <img src={item.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                    <img src={mediaUrl(item.cover_image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 ) : (
                                     <div style={{ height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <span style={{ fontSize: 36 }}>🖼️</span>
@@ -351,7 +360,7 @@ export default function Media() {
                             {/* body */}
                             <div style={{ padding: '12px 14px' }}>
                                 <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {item.title_latin || item.title_cyril || 'Sarlavsiz'}
+                                    {getLang(item, 'title', lang) || 'Sarlavsiz'}
                                 </p>
                                 <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{fmtDate(item.created_at)}</p>
                             </div>
@@ -394,6 +403,6 @@ export default function Media() {
 
 function DelWrap({ item, onClose, onDeleted }) {
     const [loading, setLoading] = useState(false);
-    const confirm = async () => { setLoading(true); try { await $api.delete(`/api/media/albums/${item.id}`); onDeleted(); } catch { /**/ } finally { setLoading(false); } };
+    const confirm = async () => { setLoading(true); try { await $api.delete(`/api/media-albums/${item.id}`); onDeleted(); } catch { /**/ } finally { setLoading(false); } };
     return <DeleteConfirm title="Albomni o'chirish" desc={<><strong style={{ color: C.text }}>{item.title_latin || 'Bu albom'}</strong> va barcha media fayllar o'chiriladi.</>} onClose={onClose} onConfirm={confirm} loading={loading} />;
 }

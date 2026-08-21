@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, mediaUrl, useLang } from "../utils/api";
 import {
     C, Lbl, iStyle, LANGS,
     ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -28,8 +29,8 @@ function LinkForm({ item, onClose, onSaved }) {
     const [errors,     setErrors]     = useState({});
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -138,8 +139,8 @@ function LinkForm({ item, onClose, onSaved }) {
                             {form.icon && (
                                 <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <span style={{ fontSize: 11, color: C.muted }}>Ko'rinishi:</span>
-                                    {form.icon.startsWith('http') ? (
-                                        <img src={form.icon} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                                    {form.icon.startsWith('http') || form.icon.startsWith('/') ? (
+                                        <img src={mediaUrl(form.icon)} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
                                     ) : (
                                         <span style={{ fontSize: 20 }}>{form.icon}</span>
                                     )}
@@ -187,6 +188,7 @@ function LinkForm({ item, onClose, onSaved }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function UsefulLinks() {
+    const lang = useLang();
     const [items,   setItems]   = useState([]);
     const [total,   setTotal]   = useState(0);
     const [page,    setPage]    = useState(1);
@@ -194,23 +196,30 @@ export default function UsefulLinks() {
     const [loading, setLoading] = useState(true);
     const [modal,   setModal]   = useState(null);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'order', sortOrder: 'asc' };
-            if (search.trim()) params.search = search.trim();
-            const res = await $api.get('/api/useful-links/all', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'order', sortOrder: 'asc' };
+                if (search.trim()) params.search = search.trim();
+                const res = await $api.get('/api/useful-links/all', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
-    const refresh = () => { setModal(null); fetchData(); };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     return (
         <div style={{ minHeight: '100%' }}>
@@ -223,12 +232,12 @@ export default function UsefulLinks() {
 
             <TableCard>
                 <TableHead
-                    gridCols="50px 44px 2fr 2fr 80px 100px 80px"
-                    cols={['#', 'Icon', 'Sarlavha', 'URL', 'Holat', 'Yaratildi', { label: '', right: true }]} />
+                    gridCols="50px 44px 2fr 2fr 100px 80px 80px"
+                    cols={['#', 'Icon', 'Sarlavha', 'URL', 'Holat', 'Sana', { label: '', right: true }]} />
 
                 {loading ? <LoadingRow /> : items.length === 0 ? <EmptyRow text="Havolalar topilmadi" /> : (
                     items.map((item, i) => (
-                        <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '50px 44px 2fr 2fr 80px 100px 80px', alignItems: 'center', padding: '10px 18px', borderBottom: i < items.length - 1 ? `1px solid #f1f5f9` : 'none', transition: 'background .1s' }}
+                        <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '50px 44px 2fr 2fr 100px 80px 80px', alignItems: 'center', padding: '10px 18px', borderBottom: i < items.length - 1 ? `1px solid #f1f5f9` : 'none', transition: 'background .1s' }}
                             onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
@@ -240,19 +249,19 @@ export default function UsefulLinks() {
                             {/* icon */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 {item.icon ? (
-                                    item.icon.startsWith('http') ? (
-                                        <img src={item.icon} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                                    item.icon.startsWith('http') || item.icon.startsWith('/') ? (
+                                        <img src={mediaUrl(item.icon)} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
                                     ) : (
                                         <span style={{ fontSize: 20 }}>{item.icon}</span>
                                     )
                                 ) : (
-                                    <span style={{ fontSize: 16 }}>🔗</span>
+                                    <span style={{ fontSize: 16, color: C.muted }}>—</span>
                                 )}
                             </div>
 
                             {/* title */}
                             <span style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {item.title_latin || item.title_cyril || '—'}
+                                {getLang(item, 'title', lang) || '—'}
                             </span>
 
                             {/* url */}
@@ -268,9 +277,11 @@ export default function UsefulLinks() {
                                 color={item.is_active ? C.green : C.muted}
                                 border={item.is_active ? C.gBdr : C.border} />
 
-                            {/* date */}
-                            <span style={{ fontSize: 11, color: C.muted }}>
-                                {item.created_at ? new Date(item.created_at).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' }) : '—'}
+                            {/* date — short */}
+                            <span style={{ fontSize: 11, color: C.muted, whiteSpace: 'nowrap' }}>
+                                {item.created_at
+                                    ? `${new Date(item.created_at).getDate()} ${new Date(item.created_at).toLocaleString('en-US', { month: 'short' })}`
+                                    : '—'}
                             </span>
 
                             {/* actions */}

@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, useLang } from "../utils/api";
 import {
     C, Spin, fmtDate, Lbl, iStyle, LANGS,
     PBtn, ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -56,8 +57,8 @@ function DocForm({ item, onClose, onSaved }) {
 
     /* focus tracking */
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
 
     const set = (k, v) => {
@@ -333,6 +334,7 @@ function DocForm({ item, onClose, onSaved }) {
    MAIN PAGE
 ═══════════════════════════════════════════════════════════════ */
 export default function AdminDocuments() {
+    const lang = useLang();
     const [items,    setItems]    = useState([]);
     const [total,    setTotal]    = useState(0);
     const [page,     setPage]     = useState(1);
@@ -342,25 +344,31 @@ export default function AdminDocuments() {
     const [loading,  setLoading]  = useState(true);
     const [modal,    setModal]    = useState(null);
     const [toggling, setToggling] = useState({});
+    const [tick, setTick] = useState(0);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim())  params.search    = search.trim();
-            if (catFilt)        params.category  = catFilt;
-            if (pubFilt !== '') params.is_public = pubFilt;
-            const res = await $api.get('/api/documents/admin', { params });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search, catFilt, pubFilt]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim())  params.search    = search.trim();
+                if (catFilt)        params.category  = catFilt;
+                if (pubFilt !== '') params.is_public = pubFilt;
+                const res = await $api.get('/api/documents/admin', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, catFilt, pubFilt, tick]);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
-
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
+    const handleSearch = v => { setSearch(v); setPage(1); };
 
     const handleTogglePublic = async item => {
         setToggling(p => ({ ...p, [item.id]: true }));
@@ -373,7 +381,7 @@ export default function AdminDocuments() {
         finally { setToggling(p => ({ ...p, [item.id]: false })); }
     };
 
-    const refresh = () => { setModal(null); fetchData(); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     const selectSt = active => ({
         padding: '8px 32px 8px 12px', borderRadius: 9, fontSize: 13, fontWeight: 500,
@@ -406,8 +414,8 @@ export default function AdminDocuments() {
                 <div style={{ display: 'flex', gap: 5 }}>
                     {[
                         { val: '',      label: 'Barchasi' },
-                        { val: 'true',  label: '✓ Ochiq',    color: C.green, bg: C.gBg, border: C.gBdr  },
-                        { val: 'false', label: '○ Yashirin', color: C.muted, bg: C.bg,  border: C.border },
+                        { val: 'true',  label: 'Ochiq',    color: C.green, bg: C.gBg, border: C.gBdr  },
+                        { val: 'false', label: 'Yashirin', color: C.muted, bg: C.bg,  border: C.border },
                     ].map(opt => {
                         const active = pubFilt === opt.val;
                         return (
@@ -459,7 +467,7 @@ export default function AdminDocuments() {
                                             fontSize: 13, fontWeight: 600, color: C.text, margin: 0,
                                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                         }}>
-                                            {item.title_latin || item.title_cyril || '—'}
+                                            {getLang(item, 'title', lang) || '—'}
                                         </p>
                                         {item.file_url && (
                                             <a href={item.file_url} target="_blank" rel="noreferrer"

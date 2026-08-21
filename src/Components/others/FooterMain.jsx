@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
+import { fetchContactInfo, getLang } from '../../utils/api';
 
 const ACCENT = '#ea6c0a';
 
@@ -24,7 +26,17 @@ const linkCls = 'block text-sm text-slate-400 hover:text-white transition-colors
 const headCls = 'text-white text-sm font-semibold mb-3 uppercase tracking-wider';
 
 export default function FooterMain() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const [contact, setContact] = useState(null);
+
+    useEffect(() => {
+        fetchContactInfo().then(setContact);
+    }, []);
+
+    const phone   = contact?.phone || '';
+    const email   = contact?.email || '';
+    const address = contact ? getLang(contact, 'address', i18n.language) : '';
+    const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : undefined;
 
     return (
         <div className="py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10"
@@ -42,30 +54,34 @@ export default function FooterMain() {
                         </svg>
                     </div>
                     <span className="text-white font-bold text-sm leading-tight">
-                        Surxondaryo viloyati<br/>umumta&apos;lim maktabi
+                        {t('Logo')}
                     </span>
                 </div>
                 <p className="text-slate-500 text-xs leading-relaxed mb-4">
-                    Maktab haqida ma&apos;lumot, rahbariyat, yangiliklar va onlayn xizmatlar.
+                    {t('Maktab_tavsifi')}
                 </p>
                 <div className="flex flex-col gap-2">
-                    <a href="tel:+998955115856"
-                        className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.59 3.38 2 2 0 0 1 3.56 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.44 16a2 2 0 0 1 .56.92z"/>
-                        </svg>
-                        +998 (95) 511 58 56
-                    </a>
-                    <a href="mailto:info@maktab.uz"
-                        className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                            <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                        info@maktab.uz
-                    </a>
+                    {phone && (
+                        <a href={telHref}
+                            className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.59 3.38 2 2 0 0 1 3.56 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.44 16a2 2 0 0 1 .56.92z"/>
+                            </svg>
+                            {phone}
+                        </a>
+                    )}
+                    {email && (
+                        <a href={`mailto:${email}`}
+                            className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            {email}
+                        </a>
+                    )}
                 </div>
             </div>
 
@@ -88,7 +104,7 @@ export default function FooterMain() {
 
             {/* Col 3 — More links */}
             <div>
-                <p className={headCls}>Xizmatlar</p>
+                <p className={headCls}>{t('Xizmatlar')}</p>
                 <ul>
                     {COL2.map(link => (
                         <li key={link.to}>
@@ -107,16 +123,16 @@ export default function FooterMain() {
             <div>
                 <p className={headCls}>{t('boglanish')}</p>
                 <ul className="space-y-1">
-                    <li><span className="text-sm text-slate-400">+998 (95) 511 58 56</span></li>
-                    <li><span className="text-sm text-slate-400">info@maktab.uz</span></li>
-                    <li><span className="text-sm text-slate-400">{t('manzil2')}</span></li>
+                    {phone && <li><span className="text-sm text-slate-400">{phone}</span></li>}
+                    {email && <li><span className="text-sm text-slate-400">{email}</span></li>}
+                    <li><span className="text-sm text-slate-400">{address || t('manzil2')}</span></li>
                 </ul>
                 <NavLink to="/contact"
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-lg text-sm
                         font-semibold text-white hover:opacity-90 transition-opacity"
                     style={{ background: ACCENT }}>
-                    Murojaat yuborish
+                    {t('Murojaatyuborish')}
                     <svg width="12" height="12" viewBox="0 0 14 15" fill="none">
                         <path d="M1.16666 7.50002H12.8333M12.8333 7.50002L6.99999 1.66669M12.8333 7.50002L6.99999 13.3334"
                             stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>

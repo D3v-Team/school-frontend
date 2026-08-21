@@ -90,6 +90,20 @@ import PhotoMedia from "./AdminPages/PhotoMedia";
 import AdminNewsEdit from "./AdminPages/AdminNewsEdit";
 import FotoGallary from "./Pages/FotoGallary";
 import VideoGallary from "./Pages/VideoGallary";
+import Newspapers from "./AdminPages/Newspapers";
+import BellSchedules from "./AdminPages/BellSchedules";
+import ClassSchedules from "./AdminPages/ClassSchedules";
+import HolidaySchedules from "./AdminPages/HolidaySchedules";
+import Staff from "./AdminPages/Staff";
+/* ── Public pages ── */
+import ClubsPage        from "./Pages/Clubs";
+import CanteenMenuPage  from "./Pages/CanteenMenuPage";
+import MeetingsPage     from "./Pages/MeetingsPage";
+import NewspapersPage   from "./Pages/NewspapersPage";
+import BellSchedulePage    from "./Pages/BellSchedulePage";
+import ClassSchedulePage   from "./Pages/ClassSchedulePage";
+import HolidaySchedulePage from "./Pages/HolidaySchedulePage";
+import StaffPage        from "./Pages/StaffPage";
 
 
 function App() {
@@ -169,8 +183,14 @@ function App() {
 
               <Route path="/admin/post/create/:ID" element={<PostCreate />} />
               <Route path="/admin/post/edit/:ID" element={<PostEdit />} />
-              <Route path="/admin/post/all/:ID" element={<AllPosts />} />>
               <Route path="/admin/post/all/:ID" element={<AllPosts />} />
+
+              {/* ── Yangi sahifalar ── */}
+              <Route path="/admin/newspapers"        element={<Newspapers />} />
+              <Route path="/admin/bell-schedules"    element={<BellSchedules />} />
+              <Route path="/admin/class-schedules"   element={<ClassSchedules />} />
+              <Route path="/admin/holiday-schedules" element={<HolidaySchedules />} />
+              <Route path="/admin/staff"             element={<Staff />} />
 
             </Route>
 
@@ -197,6 +217,15 @@ function App() {
               <Route path="/sahifa/:ID" element={<UserPost />} />
               <Route path="/fotogalereya" element={<FotoGallary />} />
               <Route path="/Videogalereya" element={<VideoGallary />} />
+              {/* ── Yangi public sahifalar ── */}
+              <Route path="/togarak"          element={<ClubsPage />} />
+              <Route path="/oshxona"          element={<CanteenMenuPage />} />
+              <Route path="/ota-ona-uchrashув" element={<MeetingsPage />} />
+              <Route path="/gazeta"           element={<NewspapersPage />} />
+              <Route path="/qongiroq"         element={<BellSchedulePage />} />
+              <Route path="/dars-jadvali"     element={<ClassSchedulePage />} />
+              <Route path="/tatil-jadvali"    element={<HolidaySchedulePage />} />
+              <Route path="/xodimlar"         element={<StaffPage />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />

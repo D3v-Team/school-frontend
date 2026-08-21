@@ -134,12 +134,12 @@ export default function InstituteStats() {
     ];
 
     const features = [
-        { accent: '#f59e0b', title: "Olimpiada g'oliblari",    desc: "Har yili viloyat va respublika olimpiadalarida o'quvchilarimiz yuqori o'rinlarni egallaydi." },
-        { accent: '#3b82f6', title: 'Zamonaviy laboratoriyalar', desc: "Fizika, kimyo va biologiya fanlaridan to'liq jihozlangan zamonaviy laboratoriya xonalari." },
-        { accent: '#8b5cf6', title: "To'garaklar va seksiyalar", desc: "20 dan ortiq to'garak: musiqa, rasm, robototexnika, sport va ko'plab qiziqarli mashg'ulotlar." },
-        { accent: '#10b981', title: "Onlayn xizmatlar",         desc: "Ariza topshirish, hujjatlar yuklab olish va direktor qabulxonasiga murojaat — to'liq onlayn." },
-        { accent: '#ec4899', title: "Zamonaviy kutubxona",      desc: "10 000+ kitob, elektron resurslar va o'qish zali bilan boyitilgan maktab kutubxonasi." },
-        { accent: '#14b8a6', title: 'Sport majmuasi',            desc: "Futbol maydoni, sport zali va suzish havzasi — sog'lom avlod uchun keng imkoniyatlar." },
+        { accent: '#f59e0b', title: 'feature_olympiad_title', desc: 'feature_olympiad_desc' },
+        { accent: '#3b82f6', title: 'feature_labs_title', desc: 'feature_labs_desc' },
+        { accent: '#8b5cf6', title: 'feature_clubs_title', desc: 'feature_clubs_desc' },
+        { accent: '#10b981', title: 'feature_online_title', desc: 'feature_online_desc' },
+        { accent: '#ec4899', title: 'feature_library_title', desc: 'feature_library_desc' },
+        { accent: '#14b8a6', title: 'feature_sport_title', desc: 'feature_sport_desc' },
     ];
 
     return (
@@ -178,14 +178,14 @@ export default function InstituteStats() {
                 {/* divider */}
                 <div className="flex items-center gap-4 mb-10">
                     <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
-                    <span className="text-[10px] text-slate-700 uppercase tracking-widest font-medium">Imkoniyatlarimiz</span>
+                    <span className="text-[10px] text-slate-700 uppercase tracking-widest font-medium">{t('Imkoniyatlarimiz')}</span>
                     <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
                 </div>
 
                 {/* feature cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {features.map((f, i) => (
-                        <FeatureCard key={i} delay={i * 0.08} {...f} />
+                        <FeatureCard key={i} delay={i * 0.08} title={t(f.title)} desc={t(f.desc)} accent={f.accent} />
                     ))}
                 </div>
 

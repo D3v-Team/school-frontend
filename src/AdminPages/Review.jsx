@@ -8,7 +8,7 @@ import Loader from '../lib/loader';
 import ReviewDelete from '../AdminComponents/review/review-delete';
 
 export default function Review() {
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true)
 

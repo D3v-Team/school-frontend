@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CustomDataTable from "../lib/custom-data-table";
 import Loader from "../lib/loader";
 import { $api } from "../utils";
+import { mediaUrl } from "../utils/api";
 import { Tooltip } from "@material-tailwind/react";
 import { CreateInteractivesServices } from "../AdminComponents/interactives-services/create-interactives-services";
 import { EditInteractivesServices } from "../AdminComponents/interactives-services/edit-interactives-services";
@@ -12,7 +13,7 @@ export default function InteractivesServices() {
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
 
     const fetchData = async () => {
         try {
@@ -49,7 +50,7 @@ export default function InteractivesServices() {
             selector: (row) => (
                 <div className="my-2">
                     <img
-                        src={row?.image[0]?.url}
+                        src={mediaUrl(row?.image[0]?.url)}
                         className="w-[80px] h-[80px] "
                     />
                 </div>

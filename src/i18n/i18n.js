@@ -2,32 +2,52 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Importing JSON files
-import en from '../locales/en.json';
 import ru from '../locales/ru.json';
 import uz from '../locales/uz.json';
-import kk from '../locales/kk.json';
+import cyrl from '../locales/cyrl.json';
 
 const resources = {
-  en: { translation: en },
-  ru: { translation: ru },
-  uz: { translation: uz },
-  kk: { translation: kk }, // Добавлен казахский язык
+  uz:   { translation: uz },   // Lotin
+  cyrl: { translation: cyrl }, // Kiril
+  kk:   { translation: cyrl }, // eski kod → kiril
+  ru:   { translation: ru },
+};
+
+const ALLOWED = ['uz', 'cyrl', 'ru'];
+
+function normalizeLng(lng) {
+  const code = (lng || 'uz').split('-')[0];
+  if (code === 'kk' || code === 'kiril' || code === 'uzcyrl') return 'cyrl';
+  return ALLOWED.includes(code) ? code : 'uz';
+}
+
+globalThis.getInitialAdminTab = () => {
+  const language = normalizeLng(localStorage.getItem('i18nextLng'));
+  return language === 'cyrl' ? 'kk' : language;
 };
 
 i18n
-  .use(LanguageDetector) // Detects the user's language
-  .use(initReactI18next) // React integration
+  .use(LanguageDetector)
+  .use(initReactI18next)
   .init({
-    resources, // Local translations
-    fallbackLng: 'uz', // Default language
+    resources,
+    fallbackLng: 'uz',
+    supportedLngs: ['uz', 'cyrl', 'kk', 'ru'],
+    nonExplicitSupportedLngs: true,
     interpolation: {
-      escapeValue: false, // No escaping required for React
+      escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'cookie', 'navigator', 'htmlTag'], // Order of language detection
-      caches: ['localStorage'], // Store language in localStorage
+      order: ['localStorage', 'cookie', 'htmlTag'],
+      caches: ['localStorage'],
+      convertDetectedLanguage: normalizeLng,
     },
   });
+
+const stored = localStorage.getItem('i18nextLng') || '';
+const next = normalizeLng(stored);
+if (next !== stored) {
+  i18n.changeLanguage(next);
+}
 
 export default i18n;

@@ -1,8 +1,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://ticty.uz/</loc>
-    <lastmod>2025-03-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <url><loc>https://ticty.uz/</loc></url>
+  <url><loc>https://ticty.uz/biz-haqimizda</loc></url>
+  <url><loc>https://ticty.uz/rahbariyat</loc></url>
+  <url><loc>https://ticty.uz/bo'lim-markazlar</loc></url>
+  <url><loc>https://ticty.uz/rekvizitlar</loc></url>
+  <url><loc>https://ticty.uz/ochiq-ma'lumotlar</loc></url>
+  <url><loc>https://ticty.uz/korrupsiyaga-kurash</loc></url>
+  <url><loc>https://ticty.uz/hujjatlar</loc></url>
+  <url><loc>https://ticty.uz/bosh-ish-orni</loc></url>
+  <url><loc>https://ticty.uz/xalqaro-aloqalar</loc></url>
+  <url><loc>https://ticty.uz/hamkorlarimiz</loc></url>
+  <url><loc>https://ticty.uz/hisobot</loc></url>
+  <url><loc>https://ticty.uz/virtual-kabinet</loc></url>
+  <url><loc>https://ticty.uz/murojaatlar</loc></url>
+  <url><loc>https://ticty.uz/fotogalereya</loc></url>
+  <url><loc>https://ticty.uz/Videogalereya</loc></url>
+  <url><loc>https://ticty.uz/barcha-yangiliklar</loc></url>
+  <url><loc>https://ticty.uz/dars-jadvali</loc></url>
 </urlset>

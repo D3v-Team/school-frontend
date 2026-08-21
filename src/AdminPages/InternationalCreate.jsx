@@ -17,7 +17,7 @@ export default function InternationalCreate() {
     const [ruinfo, setRuInfo] = useState({ title: "", description: "" });
     const [Eninfo, setEnInfo] = useState({ title: "", description: "" });
     const [KKinfo, setKKInfo] = useState({ title: "", description: "" });
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
     const [loading, setLoading] = useState(false)
 
     const CreateAboutUs = async () => {

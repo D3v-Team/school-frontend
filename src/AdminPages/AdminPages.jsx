@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { $api } from "../utils";
+import { getLang, useLang } from "../utils/api";
+import RichBox from "../AdminComponents/RichBox";
 import {
     C, Lbl, iStyle, taStyle, LANGS,
     ABtn, Overlay, MBox, MFooter, DeleteConfirm,
@@ -28,8 +30,8 @@ function PageForm({ item, onClose, onSaved }) {
     const [errors,     setErrors]     = useState({});
 
     const fRef = useRef({});
-    const [, tick] = useState(0);
-    const sf = (k, v) => { fRef.current[k] = v; tick(n => n + 1); };
+    const [, forceTick] = useState(0);
+    const sf = (k, v) => { fRef.current[k] = v; forceTick(n => n + 1); };
     const fc = k => !!fRef.current[k];
     const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: '' })); };
 
@@ -135,11 +137,7 @@ function PageForm({ item, onClose, onSaved }) {
                     </div>
                     <div>
                         <Lbl>Kontent</Lbl>
-                        <textarea rows={8} value={form[lk.content]}
-                            onChange={e => set(lk.content, e.target.value)}
-                            onFocus={() => sf(lk.content, true)} onBlur={() => sf(lk.content, false)}
-                            style={taStyle(fc(lk.content))}
-                            placeholder="Sahifa kontenti..." />
+                        <RichBox value={form[lk.content]} onChange={value => set(lk.content, value)} />
                     </div>
                     {/* char count */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 4, borderTop: `1px solid ${C.border}` }}>
@@ -170,6 +168,7 @@ function PageForm({ item, onClose, onSaved }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function AdminPagesPage() {
+    const lang = useLang();
     const [items,   setItems]   = useState([]);
     const [total,   setTotal]   = useState(0);
     const [page,    setPage]    = useState(1);
@@ -177,21 +176,28 @@ export default function AdminPagesPage() {
     const [loading, setLoading] = useState(true);
     const [modal,   setModal]   = useState(null);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await $api.get('/api/pages', { params: { page, limit: LIMIT } });
-            const d   = res.data;
-            setItems(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    }, [page, search]);
+    const [tick, setTick] = useState(0);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const res = await $api.get('/api/pages', { params: { page, limit: LIMIT } });
+                const d   = res.data;
+                if (!cancelled) {
+                    setItems(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch { if (!cancelled) setItems([]); }
+            finally { if (!cancelled) setLoading(false); }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, tick]);
 
-    const handleSearch = useCallback(v => { setSearch(v); setPage(1); }, []);
-    const refresh = () => { setModal(null); fetchData(); };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     return (
         <div style={{ minHeight: '100%' }}>
@@ -216,9 +222,11 @@ export default function AdminPagesPage() {
                             </span>
                             <span style={{ fontSize: 13, color: C.text, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {item.title_latin || '—'}
+                                                            {getLang(item, 'title', lang) || '—'}
                             </span>
                             <span style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {item.title_ru || '—'}
+                                                            {getLang(item, 'content', lang)?.replace(/<[^>]+>/g, '').slice(0, 80) || '—'}
                             </span>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
                                 <ABtn title="Tahrirlash" bg={C.bBg} bdr={C.bBdr} color={C.brand} onClick={() => setModal({ type: 'edit', item })}>

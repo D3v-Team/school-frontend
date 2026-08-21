@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { $api } from "../utils";
+import { fmtDate, LangPills } from "../AdminComponents/ui";
+import { getLang, mediaUrl, useLang } from "../utils/api";
 
 /* ── shared styles (light) ─────────────────────────────────── */
 const S = {
@@ -56,6 +58,7 @@ const Badge = ({ pub }) => (
 
 /* ── Edit modal ────────────────────────────────────────────── */
 function EditModal({ initial, onClose, onSaved }) {
+    const currentLang = useLang();
     const fileRef = useRef(null);
     const [form, setForm] = useState({
         title_latin:   initial.title_latin   || '',
@@ -67,10 +70,10 @@ function EditModal({ initial, onClose, onSaved }) {
         is_public:     initial.is_public     ?? true,
     });
     const [coverFile, setCoverFile] = useState(null);
-    const [preview, setPreview]     = useState(initial.cover_image || null);
+    const [preview, setPreview]     = useState(initial.cover_image ? mediaUrl(initial.cover_image) : null);
     const [saving, setSaving]       = useState(false);
     const [error, setError]         = useState('');
-    const [activeTab, setActiveTab] = useState('latin');
+    const [activeTab, setActiveTab] = useState(currentLang);
 
     const TABS = [
         { key: 'latin', label: '🇺🇿 Lotin' },
@@ -370,6 +373,7 @@ function DeleteModal({ item, onClose, onDeleted }) {
 /* ── Main ──────────────────────────────────────────────────── */
 export default function AdminNews() {
     const navigate = useNavigate();
+    const lang = useLang(); // navbar tilga qarab avtomatik
     const [news,    setNews]    = useState([]);
     const [total,   setTotal]   = useState(0);
     const [page,    setPage]    = useState(1);
@@ -377,36 +381,35 @@ export default function AdminNews() {
     const [loading, setLoading] = useState(true);
     const [modal,   setModal]   = useState(null);
     const LIMIT = 10;
+    const [tick, setTick] = useState(0);
 
-    const fetchNews = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
-            if (search.trim()) params.search = search.trim();
-            const res = await $api.get('/api/news', { params });
-            const d   = res.data;
-            setNews(d?.data || d?.items || []);
-            setTotal(d?.total || d?.meta?.total || 0);
-        } catch {
-            setNews([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [page, search]);
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const params = { page, limit: LIMIT, sortBy: 'created_at', sortOrder: 'desc' };
+                if (search.trim()) params.search = search.trim();
+                const res = await $api.get('/api/news', { params });
+                const d   = res.data;
+                if (!cancelled) {
+                    setNews(d?.data || d?.items || []);
+                    setTotal(d?.total || d?.meta?.total || 0);
+                }
+            } catch {
+                if (!cancelled) setNews([]);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [page, search, tick]);
 
-    useEffect(() => { fetchNews(); }, [fetchNews]);
-
-    const searchTimer = useRef(null);
-    const handleSearch = v => {
-        setSearch(v); setPage(1);
-        clearTimeout(searchTimer.current);
-        searchTimer.current = setTimeout(fetchNews, 450);
-    };
+    const handleSearch = v => { setSearch(v); setPage(1); };
+    const refresh = () => { setModal(null); setTick(t => t + 1); };
 
     const totalPages = Math.ceil(total / LIMIT);
-    const fmtDate = d => d
-        ? new Date(d).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: 'numeric' })
-        : '—';
 
     return (
         <div style={{ minHeight: '100%' }}>
@@ -435,7 +438,7 @@ export default function AdminNews() {
                 </button>
             </div>
 
-            {/* ── search ─────────────────────────────────── */}
+            {/* ── search ──────────────────────────────────── */}
             <div style={{ position: 'relative', maxWidth: 340, marginBottom: 16 }}>
                 <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }}
                     width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -510,7 +513,7 @@ export default function AdminNews() {
                             {/* title + thumb */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                                 {item.cover_image ? (
-                                    <img src={item.cover_image} alt=""
+                                    <img src={mediaUrl(item.cover_image)} alt=""
                                         style={{
                                             width: 40, height: 28, objectFit: 'cover',
                                             borderRadius: 6, flexShrink: 0,
@@ -534,7 +537,7 @@ export default function AdminNews() {
                                     fontSize: 13, fontWeight: 600, color: '#1e293b',
                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                 }}>
-                                    {item.title_latin || item.title_cyril || '—'}
+                                    {getLang(item, 'title', lang) || '—'}
                                 </span>
                             </div>
 
@@ -544,7 +547,7 @@ export default function AdminNews() {
                                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                 paddingRight: 12,
                             }}>
-                                {item.content_latin?.replace(/<[^>]+>/g, '').slice(0, 70) || '—'}
+                                {getLang(item, 'content', lang)?.replace(/<[^>]+>/g, '').slice(0, 70) || '—'}
                             </span>
 
                             {/* badge */}
@@ -637,14 +640,14 @@ export default function AdminNews() {
                 <EditModal
                     initial={modal.item}
                     onClose={() => setModal(null)}
-                    onSaved={() => { setModal(null); fetchNews(); }}
+                    onSaved={refresh}
                 />
             )}
             {modal?.mode === 'delete' && (
                 <DeleteModal
                     item={modal.item}
                     onClose={() => setModal(null)}
-                    onDeleted={() => { setModal(null); fetchNews(); }}
+                    onDeleted={refresh}
                 />
             )}
         </div>

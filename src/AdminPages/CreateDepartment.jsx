@@ -20,7 +20,7 @@ export default function CreateDepartment() {
     const [ruinfo, setRuInfo] = useState({ title: "", description: "", position: "" });
     const [Eninfo, setEnInfo] = useState({ title: "", description: "", position: "" });
     const [KKinfo, setKKInfo] = useState({ title: "", description: "", position: "" });
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
     const [imageFile, setImageFile] = useState(null);
     const [reception_days, setReception_days] = useState('')
     const [email, setEmail] = useState('')

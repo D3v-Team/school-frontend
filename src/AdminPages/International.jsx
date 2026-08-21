@@ -7,7 +7,7 @@ import Loader from '../lib/loader';
 import InternationalDelete from '../AdminComponents/International/international-delete';
 
 export default function AdminInternational() {
-    const [activeTab, setActiveTab] = useState("uz");
+    const [activeTab, setActiveTab] = useState(() => getInitialAdminTab());
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true)
 
