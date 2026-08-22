@@ -21,7 +21,6 @@ const NAV = [
         key: 'umumiy', label: 'Umumiy_malumot',
         items: [
             { to: '/biz-haqimizda', label: 'biz_haqimizda' },
-            { to: '/rahbariyat',    label: 'rahbariyat' },
             { to: '/ramzlar',       label: 'davlat_ramzlari' },
         ],
     },
@@ -39,7 +38,6 @@ const NAV = [
         items: [
             { to: '/ota-ona-uchrashув', label: 'Otaonauchrashuvlari' },
             { to: '/murojaatlar',       label: 'murojaatlar' },
-            { to: "/ochiq-ma'lumotlar", label: 'ochiq_malumotlar' },
         ],
     },
     {

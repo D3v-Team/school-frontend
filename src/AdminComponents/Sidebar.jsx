@@ -70,6 +70,7 @@ function buildMenu(t) {
             group: t('menu.g_schedules'),
             items: [
                 { name: t('menu.class_schedule'), icon: MdCalendarMonth, path: "/admin/class-schedules" },
+                { name: t('menu.meetings'),        icon: MdGroups,        path: "/admin/meetings"        },
                 { name: t('menu.events'),          icon: MdEvent,         path: "/admin/events"          },
             ],
         },

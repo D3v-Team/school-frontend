@@ -54,38 +54,8 @@ export default function FooterBot() {
     return (
         <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* left — copyright */}
-            <div>
-                <p className="text-xs text-slate-500">
-                    © {new Date().getFullYear()} — {t('Barchahuquqlarhimoyalangan')}
-                </p>
-                <a href="https://itliveacademy.uz/" target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-slate-600 hover:text-slate-400 transition-colors mt-1 block">
-                    {t('SaytITLIVEtamonidanishlabchiqilgan')}
-                </a>
-            </div>
+          
 
-            {/* right — social icons */}
-            <div className="flex items-center gap-2">
-                {SOCIALS.map(s => (
-                    <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer"
-                        aria-label={s.label}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-slate-500
-                            hover:text-white transition-all"
-                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = '#ea6c0a';
-                            e.currentTarget.style.borderColor = '#ea6c0a';
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                            e.currentTarget.style.color = '#64748b';
-                        }}>
-                        {s.icon}
-                    </a>
-                ))}
-            </div>
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const BASE_URL = "http://167.86.110.132:3002";
+export const BASE_URL = "https://school.udsgroup.uz";
 
 export const $api = axios.create({
     baseURL: `${BASE_URL}`,

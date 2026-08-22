@@ -95,6 +95,7 @@ import BellSchedules from "./AdminPages/BellSchedules";
 import ClassSchedules from "./AdminPages/ClassSchedules";
 import HolidaySchedules from "./AdminPages/HolidaySchedules";
 import Staff from "./AdminPages/Staff";
+import Meetings from "./AdminPages/Meetings";
 /* ── Public pages ── */
 import ClubsPage        from "./Pages/Clubs";
 import CanteenMenuPage  from "./Pages/CanteenMenuPage";
@@ -191,6 +192,7 @@ function App() {
               <Route path="/admin/class-schedules"   element={<ClassSchedules />} />
               <Route path="/admin/holiday-schedules" element={<HolidaySchedules />} />
               <Route path="/admin/staff"             element={<Staff />} />
+              <Route path="/admin/meetings"          element={<Meetings />} />
 
             </Route>
 

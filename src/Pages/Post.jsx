@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import MiniHeader from "../Components/MiniHeader";
 import PostHero from "../Components/userPost/PostHero";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -41,7 +40,6 @@ export default function UserPost() {
 
     return (
         <div className="">
-            <MiniHeader title={data[0]?.title[i18n?.language]} minititle={data[0]?.title[i18n?.language]} />
             <PostHero data={data} />
         </div>
     )

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MiniHeader from "../Components/MiniHeader";
 import pub, { useLang } from "../utils/api";
 
 export default function MeetingsPage() {
@@ -17,6 +16,7 @@ export default function MeetingsPage() {
             .finally(() => setLoading(false));
     }, []);
 
+    // useLang() returns 'latin' | 'cyril' | 'ru' — matches API field suffixes
     const tk = `title_${lang}`;
     const dk = `description_${lang}`;
 
@@ -37,8 +37,7 @@ export default function MeetingsPage() {
 
     return (
         <div>
-            <MiniHeader title="Ota-ona uchrashuvlari" minititle="Uchrashuvlar jadvali" />
-            <section style={{ background: '#f8fafc', minHeight: '60vh' }} className="py-12">
+            <section style={{ background: '#f8fafc', marginTop:'100px', minHeight: '60vh' }} className="py-12">
                 <div className="Container max-w-4xl mx-auto">
                     {loading ? (
                         <div className="flex justify-center py-20">

@@ -21,7 +21,7 @@ export default function DocumentsHero() {
     );
 
     return (
-        <section className="my-[32px]">
+        <section className="py-12 mt-[100px] min-h-[60vh]">
             <div className="Container">
                 <div className="flex items-center justify-center flex-col gap-[16px] w-full">
                     {data.length === 0 ? (

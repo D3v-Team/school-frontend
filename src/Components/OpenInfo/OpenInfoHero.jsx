@@ -69,7 +69,7 @@ export default function OpenInfoHero() {
             <div className="Container">
                 <div className="flex items-center justify-center flex-col gap-[24px] w-full">
                     {loading ? (
-                        <ReactLoading type="spinningBubbles" color="#000" height={100} width={100} />
+                        <ReactLoading type="spinningBubbles" color="#000" height='100vh' width={100} />
                     ) : data.length === 0 ? (
                         <h4>Malumot yo'q</h4>
                     ) : (

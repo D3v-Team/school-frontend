@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MiniHeader from "../Components/MiniHeader";
 import pub, { formatDate, mediaUrl, useLang } from "../utils/api";
 
 export default function NewspapersPage() {
@@ -21,8 +20,7 @@ export default function NewspapersPage() {
 
     return (
         <div>
-            <MiniHeader title="Maktab gazetasi" minititle="Sonlar arxivi" />
-            <section className="py-12" style={{ background: '#f8fafc', minHeight: '60vh' }}>
+            <section className="py-12 " style={{ background: '#f8fafc', minHeight: '60vh', marginTop: '100px' }}>
                 <div className="Container">
                     {loading ? (
                         <div className="flex justify-center py-20">

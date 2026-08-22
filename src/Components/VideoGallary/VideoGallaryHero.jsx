@@ -25,7 +25,7 @@ export default function VideoGallaryHero() {
     );
 
     return (
-        <section className="mt-[35px] mb-[35px]">
+        <section className="mt-[100px] py-12">
             <div className="Container">
                 <h1 className="text-[36px] font-[700] mb-8">Videogalereya</h1>
 

@@ -4,6 +4,7 @@ import Inter from "../Components/Home/Inter";
 import UpEvent from "../Components/Home/UpEvent";
 import Links from "../Components/Home/Links";
 import News from "../Components/Home/News";
+import ContactHero from "../Components/Contact/ContactHero";
 
 export default function Home() {
     return (
@@ -14,6 +15,7 @@ export default function Home() {
             <InstituteStats />
             <Inter />
             <Links />
+            <ContactHero />
         </main>
     );
 }

@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MiniHeader from "../Components/MiniHeader";
-import pub, { getLang, mediaUrl, useLang } from "../utils/api";
-import { UtensilsCrossed } from "lucide-react";
+import pub, { mediaUrl, useLang } from "../utils/api";
+import { UtensilsCrossed, Clock, Flame, Scale } from "lucide-react";
+
+const NAVY   = '#1f235b';
+const ORANGE = '#ea6c0a';
 
 const WEEKDAYS = {
     latin: ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'],
@@ -11,7 +13,13 @@ const WEEKDAYS = {
 };
 
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-const MEAL_KEYS = ['breakfast', 'lunch', 'snack'];
+
+const MEAL_META = {
+    breakfast: { label: 'Nonushta',        order: 0 },
+    lunch:     { label: 'Tushlik',         order: 1 },
+    snack:     { label: "Yengil tamaddi",  order: 2 },
+};
+const MEAL_KEYS = Object.keys(MEAL_META);
 
 function normalizeMenus(payload) {
     const source = payload?.data || payload?.items || payload;
@@ -39,12 +47,17 @@ export default function CanteenMenuPage() {
     const { t } = useTranslation();
     const lang  = useLang(); // 'latin' | 'cyril' | 'ru' — reactive
 
-    const [menus,   setMenus]   = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [menus,      setMenus]      = useState([]);
+    const [loading,    setLoading]    = useState(true);
+    const [activeDay,  setActiveDay]  = useState(null);
 
     useEffect(() => {
         pub.get('/api/canteen-menu/public/active')
-            .then(res => setMenus(normalizeMenus(res.data)))
+            .then(res => {
+                const normalized = normalizeMenus(res.data);
+                setMenus(normalized);
+                if (normalized.length) setActiveDay(normalized[0].day_of_week ?? 0);
+            })
             .catch(() => setMenus([]))
             .finally(() => setLoading(false));
     }, []);
@@ -56,105 +69,169 @@ export default function CanteenMenuPage() {
         return (WEEKDAYS[lang] || WEEKDAYS.latin)[idx] || '';
     }
 
+    const sortedMenus = useMemo(
+        () => [...menus].sort((a, b) => (a.day_of_week ?? 0) - (b.day_of_week ?? 0)),
+        [menus]
+    );
+
+    const activeMenu = sortedMenus.find(m => (m.day_of_week ?? 0) === activeDay) || sortedMenus[0];
+
+    const groupedMeals = useMemo(() => {
+        if (!activeMenu) return [];
+        const items = activeMenu.items || activeMenu.menu_items || [];
+        const groups = {};
+        items.forEach(item => {
+            const key = item.meal || 'other';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+        });
+        return Object.entries(groups).sort(
+            (a, b) => (MEAL_META[a[0]]?.order ?? 99) - (MEAL_META[b[0]]?.order ?? 99)
+        );
+    }, [activeMenu]);
+
     return (
         <div>
-            <MiniHeader title="Oshxona menyusi" minititle="Kunlik ovqat taomlari" />
-            <section className="py-14" style={{ background: 'linear-gradient(180deg,#f8fafc 0%,#fff7ed 100%)', minHeight: '60vh' }}>
+            <section className="py-20" style={{ background: '#f8fafc', minHeight: '60vh', marginTop:'100px' }}>
                 <div className="Container">
+
+                    {/* ── heading ── */}
+                    <div className="mb-9">
+                        <span className="inline-flex items-center gap-2 font-semibold tracking-widest uppercase text-xs mb-2" style={{ color: ORANGE }}>
+                            <UtensilsCrossed size={14} strokeWidth={2.2} aria-hidden="true" />
+                            {t('Oshxonamenyusi') || 'Oshxona menyusi'}
+                        </span>
+                        <h1 className="text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: NAVY }}>
+                            Haftalik ovqatlanish jadvali
+                        </h1>
+                        <div className="w-14 h-1 rounded-full mt-3" style={{ background: ORANGE }} />
+                    </div>
+
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="w-10 h-10 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
                         </div>
-                    ) : menus.length === 0 ? (
+                    ) : sortedMenus.length === 0 ? (
                         <div className="text-center py-20 text-gray-400">
                             <UtensilsCrossed size={48} strokeWidth={1.5} className="mx-auto mb-4" aria-hidden="true" />
                             <p className="text-lg">Menyu topilmadi</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                            {menus.map((menu, idx) => {
-                                const items = menu.items || menu.menu_items || [];
-                                return (
-                                    <div key={menu.id || idx} className="bg-white rounded-3xl overflow-hidden shadow-sm transition-shadow hover:shadow-lg"
-                                        style={{ border: '1px solid #fed7aa' }}>
-                                        {/* header */}
-                                        <div className="px-5 py-5 flex items-center gap-3"
-                                            style={{ background: 'linear-gradient(135deg,#0f172a,#1e293b)' }}>
-                                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
-                                                style={{ background: 'rgba(234,108,10,0.16)', border: '1px solid rgba(251,146,60,0.35)' }}>
-                                                <UtensilsCrossed size={21} color="#fb923c" aria-hidden="true" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] uppercase tracking-[0.16em] text-orange-300 mb-1">{t('Oshxonamenyusi')}</p>
-                                                <h3 className="font-bold text-white text-base leading-tight">
-                                                    {weekdayName(menu.day_of_week) || `Menyu ${idx + 1}`}
-                                                </h3>
-                                                {menu.date && (
-                                                    <span className="text-xs text-slate-400">{menu.date}</span>
-                                                )}
-                                            </div>
-                                        </div>
+                        <div className="grid lg:grid-cols-[220px_1fr] gap-6">
 
-                                        {/* image */}
-                                        {menu.cover_image && (
-                                            <img src={mediaUrl(menu.cover_image)} alt=""
-                                                className="w-full h-36 object-cover" />
+                            {/* ── kun tanlash — chap tomonda vertikal, mobil'da gorizontal ── */}
+                            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
+                                {sortedMenus.map((menu, idx) => {
+                                    const dIdx = menu.day_of_week ?? idx;
+                                    const active = dIdx === activeDay;
+                                    return (
+                                <></>
+                                    );
+                                })}
+                            </div>
+
+                            {/* ── tanlangan kunning menyusi ── */}
+                            {activeMenu && (
+                                <div className="bg-white rounded-3xl overflow-hidden w-full" style={{ border: '1px solid #fed7aa', boxShadow: '0 4px 16px rgba(15,23,42,0.05)' }}>
+
+                                    {/* cover image (agar bo'lsa) */}
+                                    {activeMenu.cover_image && (
+                                        <div className="relative h-44 overflow-hidden">
+                                            <img src={mediaUrl(activeMenu.cover_image)} alt=""
+                                                className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(31,35,91,0.55), transparent 60%)' }} />
+                                            <h2 className="absolute bottom-4 left-5 text-white font-bold text-xl">
+                                                {weekdayName(activeMenu.day_of_week)}
+                                            </h2>
+                                        </div>
+                                    )}
+
+                                    <div className="p-6">
+                                        {!activeMenu.cover_image && (
+                                            <h2 className="font-bold text-xl mb-5" style={{ color: NAVY }}>
+                                                {weekdayName(activeMenu.day_of_week)}
+                                            </h2>
                                         )}
 
-                                        {/* items list */}
-                                        {items.length > 0 && (
-                                            <ul className="px-4 py-4 space-y-2.5">
-                                                {items.map((item, i) => (
-                                                    <li key={i} className="flex items-start gap-3 rounded-2xl px-3 py-3 text-sm"
-                                                        style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
-                                                        <span className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                                                            style={{ background: '#fff7ed', color: '#ea6c0a' }}>
-                                                            <UtensilsCrossed size={15} strokeWidth={1.8} aria-hidden="true" />
-                                                        </span>
-                                                        <div className="flex-1 min-w-0">
-                                                            <span className="block text-gray-800 font-semibold">
-                                                                {item.meal && <span className="text-orange-500 mr-1 text-xs uppercase tracking-wide">{t(item.meal === 'breakfast' ? 'Nonushta' : item.meal === 'lunch' ? 'Tushlik' : 'Yengil_tamaddi')}:</span>}
-                                                                {item[nk] || item.name_latin || item.name || '—'}
+                                        {groupedMeals.length === 0 ? (
+                                            <p className="text-gray-400 text-sm py-6 text-center">Bu kun uchun taomlar kiritilmagan</p>
+                                        ) : (
+                                            <div className="flex flex-col gap-6">
+                                                {groupedMeals.map(([mealKey, foods]) => (
+                                                    <div key={mealKey}>
+                                                        {/* meal section header */}
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                                style={{ background: '#fff7ed', color: ORANGE }}>
+                                                                <UtensilsCrossed size={14} strokeWidth={2} aria-hidden="true" />
                                                             </span>
-                                                            {item.start_time && item.end_time && item.start_time !== '00:00' && (
-                                                                <span className="text-gray-400 text-xs ml-2">{item.start_time} - {item.end_time}</span>
-                                                            )}
-                                                            {(item.calories || item.weight) && (
-                                                                <span className="text-gray-400 text-xs ml-2">
-                                                                    {item.weight && `${item.weight}g`}
-                                                                    {item.weight && item.calories && ' · '}
-                                                                    {item.calories && `${item.calories} kkal`}
+                                                            <h3 className="font-bold text-sm uppercase tracking-wide" style={{ color: ORANGE }}>
+                                                                {t(MEAL_META[mealKey]?.label) || MEAL_META[mealKey]?.label || mealKey}
+                                                            </h3>
+                                                            {foods[0]?.start_time && foods[0]?.end_time && foods[0].start_time !== '00:00' && (
+                                                                <span className="text-xs text-gray-400 ml-auto flex items-center gap-1">
+                                                                    <Clock size={12} aria-hidden="true" />
+                                                                    {foods[0].start_time} – {foods[0].end_time}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        {item.price && (
-                                                            <span className="text-xs font-bold text-orange-500 flex-shrink-0">
-                                                                {item.price.toLocaleString()} so'm
-                                                            </span>
-                                                        )}
-                                                    </li>
+
+                                                        {/* food items */}
+                                                        <div className="flex flex-col gap-2">
+                                                            {foods.map((item, i) => (
+                                                                <div key={i}
+                                                                    className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                                                                    style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}
+                                                                >
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <span className="block text-gray-800 font-semibold text-sm truncate">
+                                                                            {item[nk] || item.name_latin || item.name || '—'}
+                                                                        </span>
+                                                                        {(item.calories || item.weight) && (
+                                                                            <span className="flex items-center gap-3 text-gray-400 text-xs mt-1">
+                                                                                {item.weight && (
+                                                                                    <span className="flex items-center gap-1">
+                                                                                        <Scale size={11} aria-hidden="true" /> {item.weight}g
+                                                                                    </span>
+                                                                                )}
+                                                                                {item.calories && (
+                                                                                    <span className="flex items-center gap-1">
+                                                                                        <Flame size={11} aria-hidden="true" /> {item.calories} kkal
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    {item.price && (
+                                                                        <span className="text-sm font-bold flex-shrink-0" style={{ color: ORANGE }}>
+                                                                            {item.price.toLocaleString()} so'm
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 ))}
-                                            </ul>
+                                            </div>
                                         )}
 
                                         {/* description */}
-                                        {menu[dk] && (
-                                            <p className="px-5 pb-4 text-sm text-gray-500">{menu[dk]}</p>
+                                        {activeMenu[dk] && (
+                                            <p className="mt-5 text-sm text-gray-500">{activeMenu[dk]}</p>
                                         )}
 
                                         {/* total price */}
-                                        {menu.total_price && (
-                                            <div className="px-5 py-3 flex justify-between items-center"
-                                                style={{ borderTop: '1px solid #f1f5f9', background: '#fafafa' }}>
-                                                <span className="text-sm text-gray-500">Jami narx</span>
-                                                <span className="font-bold text-orange-500">
-                                                    {menu.total_price.toLocaleString()} so'm
+                                        {activeMenu.total_price && (
+                                            <div className="mt-6 pt-4 flex justify-between items-center" style={{ borderTop: '1px solid #f1f5f9' }}>
+                                                <span className="text-sm text-gray-500">Kunlik jami narx</span>
+                                                <span className="font-bold text-lg" style={{ color: ORANGE }}>
+                                                    {activeMenu.total_price.toLocaleString()} so'm
                                                 </span>
                                             </div>
                                         )}
                                     </div>
-                                );
-                            })}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

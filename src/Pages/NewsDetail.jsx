@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import MiniHeader from "../Components/MiniHeader";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import pub, { getLang, formatDate, mediaUrl } from "../utils/api";
@@ -34,7 +33,6 @@ export default function NewDetail() {
 
     return (
         <div>
-            <MiniHeader title={title} minititle={title} />
             <section className="mt-[32px] mb-[30px]">
                 <div className="Container">
                     {data.cover_image && (

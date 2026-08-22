@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import MiniHeader from "../Components/MiniHeader";
 import pub from "../utils/api";
 
 export default function BellSchedulePage() {
@@ -28,7 +26,6 @@ export default function BellSchedulePage() {
 
     return (
         <div>
-            <MiniHeader title="Qo'ng'iroq jadvali" minititle="Darslar vaqt jadvali" />
             <section style={{ background: '#f8fafc', minHeight: '60vh' }} className="py-12">
                 <div className="Container" style={{ maxWidth: 760, margin: '0 auto' }}>
 

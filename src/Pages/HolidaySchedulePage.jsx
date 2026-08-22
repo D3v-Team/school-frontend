@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MiniHeader from "../Components/MiniHeader";
 import pub, { useLang } from "../utils/api";
 
 function diffDays(start, end) {
@@ -48,7 +47,6 @@ export default function HolidaySchedulePage() {
 
     return (
         <div>
-            <MiniHeader title="Ta'til jadvali" minititle="O'quv yili ta'tillari" />
             <section className="py-12" style={{ background: '#f8fafc', minHeight: '60vh' }}>
                 <div className="Container max-w-4xl mx-auto">
                     {loading ? (

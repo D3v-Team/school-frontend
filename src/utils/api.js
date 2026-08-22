@@ -5,7 +5,7 @@
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
-export const BASE = 'http://167.86.110.132:3002';
+export const BASE = 'https://school.udsgroup.uz';
 
 const pub = axios.create({ baseURL: BASE });
 
@@ -18,7 +18,7 @@ export default pub;
 export function normalizeLang(lang) {
     const code = (lang || 'uz').split('-')[0].toLowerCase();
     if (code === 'ru') return 'ru';
-    if (code === 'cyrl' || code === 'kk' || code === 'kiril' || code === 'uzcyrl') return 'cyrl';
+    if (code === 'cyrl' || code === 'kk' || code === 'kiril' || code === 'uzcyrl') return 'cyril';
     return 'latin';
 }
 
